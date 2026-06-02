@@ -1,0 +1,121 @@
+import React, { useEffect, useRef } from "react";
+import { Tabs } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
+import * as Notifications from "expo-notifications";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
+
+export default function TabLayout() {
+  const notificationListener = useRef<Notifications.Subscription>();
+  const responseListener = useRef<Notifications.Subscription>();
+
+  useEffect(() => {
+    notificationListener.current =
+      Notifications.addNotificationReceivedListener((notification) => {
+        console.log("[NOTIF]", notification);
+      });
+    responseListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        console.log("[NOTIF RESPONSE]", response);
+      });
+    return () => {
+      notificationListener.current?.remove();
+      responseListener.current?.remove();
+    };
+  }, []);
+
+  return (
+    <Tabs
+      screenOptions={{
+        tabBarStyle: styles.tabBar,
+        tabBarActiveTintColor: "#1a237e",
+        tabBarInactiveTintColor: "#9e9e9e",
+        tabBarLabelStyle: styles.tabLabel,
+        headerStyle: styles.header,
+        headerTintColor: "#ffffff",
+        headerTitleStyle: styles.headerTitle,
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "Beranda",
+          headerTitle: "LohParkir",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="scan"
+        options={{
+          title: "Scan QR",
+          headerTitle: "Scan QR Petugas",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="qr-code" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="report"
+        options={{
+          title: "Laporan",
+          headerTitle: "Laporan Parkir Ilegal",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="document-text" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="history"
+        options={{
+          title: "Riwayat",
+          headerTitle: "Riwayat Pembayaran",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="time" size={size} color={color} />
+          ),
+        }}
+      />
+    </Tabs>
+  );
+}
+
+const styles = StyleSheet.create({
+  tabBar: {
+    backgroundColor: "#ffffff",
+    borderTopWidth: 1,
+    borderTopColor: "#e0e0e0",
+    height: 65,
+    paddingBottom: 8,
+    paddingTop: 4,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  tabLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  header: {
+    backgroundColor: "#1a237e",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  headerTitle: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+});
