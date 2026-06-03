@@ -321,7 +321,7 @@ VALUES
 
     -- Scan valid oleh Andi (QR Petugas 1)
     (
-        'g1000000-0000-4000-8000-000000000001',
+        'e1000000-0000-4000-8000-000000000001',
         'c1000000-0000-4000-8000-000000000001',
         'f1000000-0000-4000-8000-000000000001',
         'LOHPARKIR-DSH-2024-001',
@@ -335,7 +335,7 @@ VALUES
 
     -- Scan valid oleh Dewi (QR Petugas 2)
     (
-        'g1000000-0000-4000-8000-000000000002',
+        'e1000000-0000-4000-8000-000000000002',
         'c1000000-0000-4000-8000-000000000002',
         'f1000000-0000-4000-8000-000000000002',
         'LOHPARKIR-DSH-2024-002',
@@ -349,7 +349,7 @@ VALUES
 
     -- Scan valid oleh Andi (QR Petugas 3)
     (
-        'g1000000-0000-4000-8000-000000000003',
+        'e1000000-0000-4000-8000-000000000003',
         'c1000000-0000-4000-8000-000000000001',
         'f1000000-0000-4000-8000-000000000003',
         'LOHPARKIR-DSH-2024-003',
@@ -363,7 +363,7 @@ VALUES
 
     -- Scan invalid (kode tidak dikenal / QR palsu)
     (
-        'g1000000-0000-4000-8000-000000000004',
+        'e1000000-0000-4000-8000-000000000004',
         'c1000000-0000-4000-8000-000000000002',
         NULL,
         'LOHPARKIR-FAKE-9999',
@@ -377,7 +377,7 @@ VALUES
 
     -- Scan revoked (QR lama 2023 yang sudah dicabut)
     (
-        'g1000000-0000-4000-8000-000000000005',
+        'e1000000-0000-4000-8000-000000000005',
         'c1000000-0000-4000-8000-000000000001',
         'f1000000-0000-4000-8000-000000000099',
         'LOHPARKIR-DSH-2023-001',
@@ -391,7 +391,7 @@ VALUES
 
     -- Scan valid kemarin (untuk historis)
     (
-        'g1000000-0000-4000-8000-000000000006',
+        'e1000000-0000-4000-8000-000000000006',
         'c1000000-0000-4000-8000-000000000002',
         'f1000000-0000-4000-8000-000000000001',
         'LOHPARKIR-DSH-2024-001',
@@ -405,7 +405,7 @@ VALUES
 
     -- Scan valid 2 hari lalu
     (
-        'g1000000-0000-4000-8000-000000000007',
+        'e1000000-0000-4000-8000-000000000007',
         NULL,
         'f1000000-0000-4000-8000-000000000002',
         'LOHPARKIR-DSH-2024-002',
@@ -430,7 +430,7 @@ VALUES
 
     -- Laporan 1: diselesaikan
     (
-        'h1000000-0000-4000-8000-000000000001',
+        'd1000000-0000-4000-8000-000000000001',
         'c1000000-0000-4000-8000-000000000001',
         'https://storage.lohparkir.id/reports/RPT-20240601-00001/foto_01.jpg',
         'Motor parkir sembarangan di trotoar, menghalangi pejalan kaki. Petugas tidak terlihat di lokasi.',
@@ -445,7 +445,7 @@ VALUES
 
     -- Laporan 2: sedang diproses
     (
-        'h1000000-0000-4000-8000-000000000002',
+        'd-0000-4000-8000-000000000002',
         'c1000000-0000-4000-8000-000000000002',
         'https://storage.lohparkir.id/reports/RPT-20240603-00001/foto_01.jpg',
         'Mobil diparkir di depan pintu pemadam kebakaran selama berjam-jam. Tanpa tiket parkir resmi.',
@@ -454,13 +454,13 @@ VALUES
         'Jl. Listrik No.5, Petisah Tengah, Medan Petisah',
         'RPT-20240603-00001',
         'sedang_diproses',
-        'g1000000-0000-4000-8000-000000000004',
+        'e1000000-0000-4000-8000-000000000004',
         NOW() - INTERVAL '3 days'
     ),
 
     -- Laporan 3: baru diterima (pending)
     (
-        'h1000000-0000-4000-8000-000000000003',
+        'd1000000-0000-4000-8000-000000000003',
         'c1000000-0000-4000-8000-000000000001',
         'https://storage.lohparkir.id/reports/RPT-20240605-00001/foto_01.jpg',
         'Petugas parkir liar meminta bayaran tanpa karcis resmi dan badge tidak terlihat.',
@@ -469,13 +469,13 @@ VALUES
         'Jl. Kota Baru No.8, Petisah Tengah, Medan Petisah',
         'RPT-20240605-00001',
         'diterima',
-        'g1000000-0000-4000-8000-000000000005',
+        'e1000000-0000-4000-8000-000000000005',
         NOW() - INTERVAL '1 day'
     ),
 
     -- Laporan 4: ditolak (tidak memenuhi syarat)
     (
-        'h1000000-0000-4000-8000-000000000004',
+        'd1000000-0000-4000-8000-000000000004',
         'c1000000-0000-4000-8000-000000000002',
         'https://storage.lohparkir.id/reports/RPT-20240604-00001/foto_01.jpg',
         'Foto tidak jelas, tidak dapat diverifikasi lokasi dan identitas petugas.',
@@ -501,8 +501,8 @@ VALUES
 
     -- Log untuk laporan 1: diterima → sedang_diproses → diselesaikan
     (
-        'i1000000-0000-4000-8000-000000000001',
-        'h1000000-0000-4000-8000-000000000001',
+        'd-0000-4000-8000-000000000001',
+        'd-0000-4000-8000-000000000001',
         'a2000000-0000-4000-8000-000000000001',
         'diterima',
         'sedang_diproses',
@@ -510,8 +510,8 @@ VALUES
         NOW() - INTERVAL '4 days'
     ),
     (
-        'i1000000-0000-4000-8000-000000000002',
-        'h1000000-0000-4000-8000-000000000001',
+        'd-0000-4000-8000-000000000002',
+        'd-0000-4000-8000-000000000001',
         'a2000000-0000-4000-8000-000000000001',
         'sedang_diproses',
         'diselesaikan',
@@ -521,8 +521,8 @@ VALUES
 
     -- Log untuk laporan 2: diterima → sedang_diproses
     (
-        'i1000000-0000-4000-8000-000000000003',
-        'h1000000-0000-4000-8000-000000000002',
+        'd-0000-4000-8000-000000000003',
+        'd-0000-4000-8000-000000000002',
         'a2000000-0000-4000-8000-000000000002',
         'diterima',
         'sedang_diproses',
@@ -532,8 +532,8 @@ VALUES
 
     -- Log untuk laporan 4: diterima → ditolak
     (
-        'i1000000-0000-4000-8000-000000000004',
-        'h1000000-0000-4000-8000-000000000004',
+        'd-0000-4000-8000-000000000004',
+        'd-0000-4000-8000-000000000004',
         'a2000000-0000-4000-8000-000000000001',
         'diterima',
         'ditolak',
@@ -554,7 +554,7 @@ VALUES
 
     -- Transaksi 1: QRIS berhasil, motor, Zona Merdeka Walk
     (
-        'j1000000-0000-4000-8000-000000000001',
+        'd-0000-4000-8000-000000000001',
         'c1000000-0000-4000-8000-000000000001',
         'e1000000-0000-4000-8000-000000000001',
         'd1000000-0000-4000-8000-000000000001',
@@ -563,14 +563,14 @@ VALUES
         'berhasil',
         'IDMP-20240601-ANK-001',
         'QRIS-REF-MWK-20240601-7821',
-        'https://storage.lohparkir.id/struk/j1000000-0000-4000-8000-000000000001.pdf',
+        'https://storage.lohparkir.id/struk/d-0000-4000-8000-000000000001.pdf',
         NOW() - INTERVAL '5 days',
         NOW() - INTERVAL '5 days'
     ),
 
     -- Transaksi 2: tunai berhasil, mobil, Zona Lapangan Merdeka
     (
-        'j1000000-0000-4000-8000-000000000002',
+        'd-0000-4000-8000-000000000002',
         'c1000000-0000-4000-8000-000000000002',
         'e1000000-0000-4000-8000-000000000002',
         'd1000000-0000-4000-8000-000000000002',
@@ -579,14 +579,14 @@ VALUES
         'berhasil',
         'IDMP-20240601-DEW-001',
         NULL,
-        'https://storage.lohparkir.id/struk/j1000000-0000-4000-8000-000000000002.pdf',
+        'https://storage.lohparkir.id/struk/d-0000-4000-8000-000000000002.pdf',
         NOW() - INTERVAL '4 days',
         NOW() - INTERVAL '4 days'
     ),
 
     -- Transaksi 3: QRIS berhasil, motor, Zona Sun Plaza
     (
-        'j1000000-0000-4000-8000-000000000003',
+        'd-0000-4000-8000-000000000003',
         'c1000000-0000-4000-8000-000000000001',
         'e1000000-0000-4000-8000-000000000003',
         'd1000000-0000-4000-8000-000000000003',
@@ -595,14 +595,14 @@ VALUES
         'berhasil',
         'IDMP-20240602-ANK-001',
         'QRIS-REF-SPZ-20240602-3341',
-        'https://storage.lohparkir.id/struk/j1000000-0000-4000-8000-000000000003.pdf',
+        'https://storage.lohparkir.id/struk/d-0000-4000-8000-000000000003.pdf',
         NOW() - INTERVAL '3 days',
         NOW() - INTERVAL '3 days'
     ),
 
     -- Transaksi 4: QRIS gagal (timeout gateway)
     (
-        'j1000000-0000-4000-8000-000000000004',
+        'd-0000-4000-8000-000000000004',
         'c1000000-0000-4000-8000-000000000002',
         'e1000000-0000-4000-8000-000000000001',
         'd1000000-0000-4000-8000-000000000001',
@@ -618,7 +618,7 @@ VALUES
 
     -- Transaksi 5: tunai berhasil, motor, Zona Pasar Petisah
     (
-        'j1000000-0000-4000-8000-000000000005',
+        'd-0000-4000-8000-000000000005',
         NULL,
         'e1000000-0000-4000-8000-000000000002',
         'd1000000-0000-4000-8000-000000000004',
@@ -627,14 +627,14 @@ VALUES
         'berhasil',
         'IDMP-20240604-HDR-001',
         NULL,
-        'https://storage.lohparkir.id/struk/j1000000-0000-4000-8000-000000000005.pdf',
+        'https://storage.lohparkir.id/struk/d-0000-4000-8000-000000000005.pdf',
         NOW() - INTERVAL '1 day',
         NOW() - INTERVAL '1 day'
     ),
 
     -- Transaksi 6: QRIS berhasil hari ini, mobil
     (
-        'j1000000-0000-4000-8000-000000000006',
+        'd-0000-4000-8000-000000000006',
         'c1000000-0000-4000-8000-000000000001',
         'e1000000-0000-4000-8000-000000000003',
         'd1000000-0000-4000-8000-000000000003',
@@ -643,14 +643,14 @@ VALUES
         'berhasil',
         'IDMP-20240606-ANK-001',
         'QRIS-REF-SPZ-20240606-9912',
-        'https://storage.lohparkir.id/struk/j1000000-0000-4000-8000-000000000006.pdf',
+        'https://storage.lohparkir.id/struk/d-0000-4000-8000-000000000006.pdf',
         NOW() - INTERVAL '3 hours',
         NOW() - INTERVAL '3 hours'
     ),
 
     -- Transaksi 7: tunai berhasil hari ini
     (
-        'j1000000-0000-4000-8000-000000000007',
+        'd-0000-4000-8000-000000000007',
         'c1000000-0000-4000-8000-000000000002',
         'e1000000-0000-4000-8000-000000000001',
         'd1000000-0000-4000-8000-000000000001',
@@ -659,7 +659,7 @@ VALUES
         'berhasil',
         'IDMP-20240606-DEW-001',
         NULL,
-        'https://storage.lohparkir.id/struk/j1000000-0000-4000-8000-000000000007.pdf',
+        'https://storage.lohparkir.id/struk/d-0000-4000-8000-000000000007.pdf',
         NOW() - INTERVAL '1 hour',
         NOW() - INTERVAL '1 hour'
     )
@@ -677,46 +677,46 @@ VALUES
 
     -- Notifikasi laporan baru → semua admin (target NULL = broadcast admin)
     (
-        'k1000000-0000-4000-8000-000000000001',
+        'd-0000-4000-8000-000000000001',
         NULL,
         'Laporan Baru Masuk',
         'Laporan parkir liar baru telah diterima (RPT-20240605-00001). Segera tindak lanjuti.',
         'laporan_baru',
         'high',
-        '{"ticket_no": "RPT-20240605-00001", "report_id": "h1000000-0000-4000-8000-000000000003"}',
+        '{"ticket_no": "RPT-20240605-00001", "report_id": "d-0000-4000-8000-000000000003"}',
         FALSE,
         NOW() - INTERVAL '1 day'
     ),
 
     -- Notifikasi status laporan → Andi (laporan 1 diselesaikan)
     (
-        'k1000000-0000-4000-8000-000000000002',
+        'd-0000-4000-8000-000000000002',
         'c1000000-0000-4000-8000-000000000001',
         'Laporan Anda Telah Diselesaikan',
         'Laporan parkir liar Anda (RPT-20240601-00001) telah diselesaikan oleh tim Dishub Medan. Terima kasih atas partisipasi Anda.',
         'laporan_status',
         'normal',
-        '{"ticket_no": "RPT-20240601-00001", "status": "diselesaikan", "report_id": "h1000000-0000-4000-8000-000000000001"}',
+        '{"ticket_no": "RPT-20240601-00001", "status": "diselesaikan", "report_id": "d-0000-4000-8000-000000000001"}',
         TRUE,
         NOW() - INTERVAL '3 days'
     ),
 
     -- Notifikasi status laporan → Dewi (laporan 4 ditolak)
     (
-        'k1000000-0000-4000-8000-000000000003',
+        'd-0000-4000-8000-000000000003',
         'c1000000-0000-4000-8000-000000000002',
         'Laporan Anda Ditolak',
         'Laporan Anda (RPT-20240604-00001) tidak dapat diproses karena foto bukti tidak memenuhi standar. Silakan coba kembali dengan foto yang lebih jelas.',
         'laporan_status',
         'normal',
-        '{"ticket_no": "RPT-20240604-00001", "status": "ditolak", "report_id": "h1000000-0000-4000-8000-000000000004"}',
+        '{"ticket_no": "RPT-20240604-00001", "status": "ditolak", "report_id": "d-0000-4000-8000-000000000004"}',
         FALSE,
         NOW() - INTERVAL '1 day'
     ),
 
     -- Notifikasi sistem → superadmin
     (
-        'k1000000-0000-4000-8000-000000000004',
+        'd-0000-4000-8000-000000000004',
         'a1000000-0000-4000-8000-000000000001',
         'Sistem Berjalan Normal',
         'Seeding data awal berhasil dilakukan. Sistem LohParkir siap digunakan.',
@@ -740,7 +740,7 @@ VALUES
 
     -- Superadmin membuat Admin 1
     (
-        'l1000000-0000-4000-8000-000000000001',
+        'd-0000-4000-8000-000000000001',
         'a1000000-0000-4000-8000-000000000001',
         'CREATE_USER',
         'users',
@@ -753,7 +753,7 @@ VALUES
 
     -- Superadmin membuat Admin 2
     (
-        'l1000000-0000-4000-8000-000000000002',
+        'd-0000-4000-8000-000000000002',
         'a1000000-0000-4000-8000-000000000001',
         'CREATE_USER',
         'users',
@@ -766,7 +766,7 @@ VALUES
 
     -- Admin 1 mendaftarkan Petugas 1
     (
-        'l1000000-0000-4000-8000-000000000003',
+        'd-0000-4000-8000-000000000003',
         'a2000000-0000-4000-8000-000000000001',
         'CREATE_OFFICER',
         'officers',
@@ -779,7 +779,7 @@ VALUES
 
     -- Admin 1 generate QR untuk Petugas 1
     (
-        'l1000000-0000-4000-8000-000000000004',
+        'd-0000-4000-8000-000000000004',
         'a2000000-0000-4000-8000-000000000001',
         'CREATE_QR',
         'qr_codes',
@@ -792,7 +792,7 @@ VALUES
 
     -- Admin 1 mencabut QR lama
     (
-        'l1000000-0000-4000-8000-000000000005',
+        'd-0000-4000-8000-000000000005',
         'a2000000-0000-4000-8000-000000000001',
         'REVOKE_QR',
         'qr_codes',

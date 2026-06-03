@@ -7,8 +7,8 @@
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "migrate": "node -e \"require('dotenv').config(); const {Pool} = require('pg'); const fs = require('fs'); const pool = new Pool(); pool.query(fs.readFileSync('../database/migrations/001_init.sql','utf8')).then(()=>console.log('Migration done')).catch(console.error).finally(()=>pool.end())\"",
-    "seed": "node -e \"require('dotenv').config(); const {Pool} = require('pg'); const fs = require('fs'); const pool = new Pool(); pool.query(fs.readFileSync('../database/seeds/001_seed.sql','utf8')).then(()=>console.log('Seed done')).catch(console.error).finally(()=>pool.end())\"",
+    "migrate": "node migrate.js",
+    "seed": "node seed.js",
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {
