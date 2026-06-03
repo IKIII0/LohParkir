@@ -24,6 +24,9 @@ yarn-error.log*
 # ─── TypeScript ──────────────────────────────────────────────
 *.tsbuildinfo
 
+# ─── Asset Generator Script (tidak perlu di-commit) ─────────────────────────
+mobile/generate-assets.js
+
 # ─── Expo / React Native ─────────────────────────────────────
 .expo/
 android/
