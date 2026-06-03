@@ -1,36 +1,9 @@
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
-import * as Notifications from "expo-notifications";
-
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+import { StyleSheet } from "react-native";
 
 export default function TabLayout() {
-  const notificationListener = useRef<Notifications.Subscription>();
-  const responseListener = useRef<Notifications.Subscription>();
-
-  useEffect(() => {
-    notificationListener.current =
-      Notifications.addNotificationReceivedListener((notification) => {
-        console.log("[NOTIF]", notification);
-      });
-    responseListener.current =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log("[NOTIF RESPONSE]", response);
-      });
-    return () => {
-      notificationListener.current?.remove();
-      responseListener.current?.remove();
-    };
-  }, []);
-
   return (
     <Tabs
       screenOptions={{
