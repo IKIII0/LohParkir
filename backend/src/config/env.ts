@@ -7,11 +7,17 @@ const envSchema = z.object({
   APP_VERSION:            z.string().default('1.0.0'),
 
   // Database
+  PGHOST:                 z.string().optional(),
+  PGPORT:                 z.coerce.number().optional(),
+  PGDATABASE:             z.string().optional(),
+  PGUSER:                 z.string().optional(),
+  PGPASSWORD:             z.string().optional(),
+
   DB_HOST:                z.string().default('localhost'),
   DB_PORT:                z.coerce.number().default(5432),
   DB_NAME:                z.string().default('lohparkir'),
   DB_USER:                z.string().default('postgres'),
-  DB_PASSWORD:            z.string(),
+  DB_PASSWORD:            z.string().optional(),
   DB_POOL_MIN:            z.coerce.number().default(2),
   DB_POOL_MAX:            z.coerce.number().default(10),
 
