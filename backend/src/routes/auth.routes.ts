@@ -12,6 +12,8 @@ import {
 import { logAudit } from '../services/audit.service';
 import { v4 as uuidv4 } from 'uuid';
 import { env } from '../config/env';
+import multer from 'multer';
+import path from 'path';
 
 const router = Router();
 
@@ -213,7 +215,7 @@ router.post('/logout', authenticate, asyncHandler(async (req: Request, res: Resp
 // ─── GET /api/v1/auth/me ──────────────────────────────────────────────────────
 router.get('/me', authenticate, asyncHandler(async (req: Request, res: Response) => {
   const result = await pool.query(
-    'SELECT id, nama, email, role, is_active, last_login_at, created_at FROM users WHERE id = $1',
+    'SELECT id, nama, email, role, is_active, foto_url, last_login_at, created_at FROM users WHERE id = $1',
     [req.user!.userId]
   );
   if (!result.rows[0]) throw createError('User tidak ditemukan', 404);
@@ -243,6 +245,71 @@ router.put('/fcm-token', authenticate, asyncHandler(async (req: Request, res: Re
   if (!fcmToken) throw createError('FCM token diperlukan', 400);
   await pool.query('UPDATE users SET fcm_token = $1 WHERE id = $2', [fcmToken, req.user!.userId]);
   res.json({ success: true, message: 'FCM token berhasil diperbarui' });
+}));
+
+// Multer config for avatar upload
+const avatarStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, env.UPLOAD_DIR),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `avatar-${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
+  },
+});
+const uploadAvatar = multer({
+  storage: avatarStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB max
+  fileFilter: (_req, file, cb) => {
+    if (['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Format file tidak didukung. Gunakan JPG, PNG, atau WebP.'));
+    }
+  },
+});
+
+// ─── PUT /api/v1/auth/profile-picture ─────────────────────────────────────────
+router.put('/profile-picture', authenticate, uploadAvatar.single('avatar'), asyncHandler(async (req: Request, res: Response) => {
+  if (!req.file) {
+    throw createError('File foto profil tidak ditemukan', 400);
+  }
+
+  const fotoUrl = `/uploads/${req.file.filename}`;
+  const userId = req.user!.userId;
+
+  // Update in DB
+  await pool.query('UPDATE users SET foto_url = $1 WHERE id = $2', [fotoUrl, userId]);
+
+  // Fetch updated user
+  const result = await pool.query(
+    'SELECT id, nama, email, role, is_active, foto_url, last_login_at, created_at FROM users WHERE id = $1',
+    [userId]
+  );
+  const user = result.rows[0];
+
+  // Resolve officerId if role is officer
+  let officerId = null;
+  if (user.role === 'officer') {
+    const offRes = await pool.query('SELECT id FROM officers WHERE user_id = $1', [user.id]);
+    if (offRes.rows[0]) {
+      officerId = offRes.rows[0].id;
+    }
+  }
+
+  // Audit log
+  await logAudit({
+    userId,
+    aksi: 'UPDATE_PROFILE_PICTURE',
+    ipAddress: req.ip,
+  });
+
+  res.json({
+    success: true,
+    message: 'Foto profil berhasil diperbarui',
+    data: {
+      ...user,
+      officerId,
+    },
+  });
 }));
 
 export default router;

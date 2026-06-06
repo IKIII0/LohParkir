@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash   TEXT,
     fcm_token       TEXT,
     is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+    foto_url        TEXT,
     last_login_at   TIMESTAMPTZ,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()

@@ -8,6 +8,7 @@ interface User {
   email: string;
   role: 'public' | 'officer' | 'admin' | 'superadmin';
   officerId?: string | null;
+  foto_url?: string | null;
 }
 
 interface AuthState {
@@ -19,6 +20,7 @@ interface AuthState {
   register: (data: any) => Promise<void>;
   logout: () => Promise<void>;
   loadUser: () => Promise<void>;
+  updateProfilePicture: (imageUri: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -76,6 +78,25 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
     } catch (err) {
       console.log('Error loading user:', err);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  updateProfilePicture: async (imageUri: string) => {
+    set({ isLoading: true });
+    try {
+      const formData = new FormData();
+      formData.append('avatar', {
+        uri: imageUri,
+        type: 'image/jpeg',
+        name: 'avatar.jpg',
+      } as any);
+
+      const res = await authApi.updateProfilePicture(formData);
+      const updatedUser = res.data.data;
+      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+      set({ user: updatedUser });
     } finally {
       set({ isLoading: false });
     }

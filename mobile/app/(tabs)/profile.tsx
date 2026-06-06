@@ -7,13 +7,15 @@ import {
   Alert,
   ScrollView,
   RefreshControl,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useAuthStore } from '../../src/store/authStore';
 
 export default function ProfileScreen() {
-  const { user, logout, loadUser } = useAuthStore();
+  const { user, logout, loadUser, updateProfilePicture } = useAuthStore();
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
@@ -33,6 +35,60 @@ export default function ProfileScreen() {
         },
       },
     ]);
+  };
+
+  const pickPhoto = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Izin Galeri Diperlukan', 'Mohon izinkan akses galeri untuk mengubah foto profil.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (!result.canceled) {
+      uploadAvatar(result.assets[0].uri);
+    }
+  };
+
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Izin Kamera Diperlukan', 'Mohon izinkan akses kamera untuk mengambil foto profil.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (!result.canceled) {
+      uploadAvatar(result.assets[0].uri);
+    }
+  };
+
+  const uploadAvatar = async (uri: string) => {
+    try {
+      await updateProfilePicture(uri);
+      Alert.alert('Berhasil', 'Foto profil Anda berhasil diperbarui.');
+    } catch (err: any) {
+      Alert.alert('Gagal Mengunggah', err.response?.data?.message || 'Terjadi kesalahan saat mengunggah foto.');
+    }
+  };
+
+  const handleChangeAvatar = () => {
+    Alert.alert(
+      'Ubah Foto Profil',
+      'Pilih sumber foto profil Anda:',
+      [
+        { text: 'Ambil Foto (Kamera)', onPress: takePhoto },
+        { text: 'Pilih dari Galeri', onPress: pickPhoto },
+        { text: 'Batal', style: 'cancel' }
+      ]
+    );
   };
 
   const getRoleLabel = (role: string) => {
@@ -79,7 +135,21 @@ export default function ProfileScreen() {
         end={{ x: 1, y: 1 }}
       >
         <View style={[styles.avatarCircle, { borderColor: getRoleColor(user?.role || '') }]}>
-          <Ionicons name="person" size={50} color="#1a237e" />
+          {user?.foto_url ? (
+            <Image
+              source={{ uri: `https://lohparkir-production.up.railway.app${user.foto_url}` }}
+              style={styles.avatarImage}
+            />
+          ) : (
+            <Ionicons name="person" size={50} color="#1a237e" />
+          )}
+          <TouchableOpacity
+            style={[styles.editAvatarBadge, { backgroundColor: getRoleColor(user?.role || '') }]}
+            onPress={handleChangeAvatar}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="camera" size={15} color="#fff" />
+          </TouchableOpacity>
         </View>
         <Text style={styles.profileName}>{user?.nama}</Text>
         <View style={[styles.roleBadge, { backgroundColor: getRoleColor(user?.role || '') + '15', borderColor: getRoleColor(user?.role || '') }]}>
@@ -156,6 +226,29 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    position: 'relative',
+  },
+  avatarImage: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+  },
+  editAvatarBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   profileName: { fontSize: 20, fontWeight: '800', color: '#fff' },
   roleBadge: {

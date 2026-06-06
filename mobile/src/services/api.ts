@@ -74,6 +74,10 @@ export const authApi = {
   register: (data: any) =>
     api.post('/auth/register', data),
   me: () => api.get('/auth/me'),
+  updateProfilePicture: (formData: FormData) =>
+    api.put('/auth/profile-picture', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
   updateFcmToken: (fcmToken: string) =>
     api.put('/auth/fcm-token', { fcmToken }),
 };
