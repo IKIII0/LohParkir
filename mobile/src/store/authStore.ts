@@ -23,7 +23,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  isLoading: true, // Mulai dengan true agar _layout.tsx memproses loading awal
+  isLoading: true,
   isLoggedIn: false,
 
   login: async (email: string, password: string) => {
@@ -46,7 +46,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true });
     try {
       await authApi.register(data);
-      // Pendaftaran sukses, tidak otomatis masuk (sesuai permintaan user)
     } finally {
       set({ isLoading: false });
     }
@@ -64,6 +63,16 @@ export const useAuthStore = create<AuthState>((set) => ({
       const token = await AsyncStorage.getItem('accessToken');
       if (userJson && token) {
         set({ user: JSON.parse(userJson), isLoggedIn: true });
+
+        // Update profile data in the background from server
+        try {
+          const res = await authApi.me();
+          const freshUser = res.data.data;
+          await AsyncStorage.setItem('user', JSON.stringify(freshUser));
+          set({ user: freshUser });
+        } catch (serverErr) {
+          console.log('Failed to fetch fresh user details:', serverErr);
+        }
       }
     } catch (err) {
       console.log('Error loading user:', err);
