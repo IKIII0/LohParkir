@@ -52,6 +52,15 @@ router.post('/login', authLimiter, asyncHandler(async (req: Request, res: Respon
   // Update last_login
   await pool.query('UPDATE users SET last_login_at = NOW() WHERE id = $1', [user.id]);
 
+  // Resolve officerId if role is officer
+  let officerId = null;
+  if (user.role === 'officer') {
+    const offRes = await pool.query('SELECT id FROM officers WHERE user_id = $1', [user.id]);
+    if (offRes.rows[0]) {
+      officerId = offRes.rows[0].id;
+    }
+  }
+
   // Audit log
   await logAudit({
     userId: user.id,
@@ -71,6 +80,7 @@ router.post('/login', authLimiter, asyncHandler(async (req: Request, res: Respon
         nama: user.nama,
         email: user.email,
         role: user.role,
+        officerId,
       },
     },
   });
@@ -112,7 +122,24 @@ router.get('/me', authenticate, asyncHandler(async (req: Request, res: Response)
     [req.user!.userId]
   );
   if (!result.rows[0]) throw createError('User tidak ditemukan', 404);
-  res.json({ success: true, data: result.rows[0] });
+  const user = result.rows[0];
+
+  // Resolve officerId if role is officer
+  let officerId = null;
+  if (user.role === 'officer') {
+    const offRes = await pool.query('SELECT id FROM officers WHERE user_id = $1', [user.id]);
+    if (offRes.rows[0]) {
+      officerId = offRes.rows[0].id;
+    }
+  }
+
+  res.json({
+    success: true,
+    data: {
+      ...user,
+      officerId,
+    },
+  });
 }));
 
 // ─── PUT /api/v1/auth/fcm-token ───────────────────────────────────────────────

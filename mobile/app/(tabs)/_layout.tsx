@@ -2,8 +2,12 @@ import React from "react";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet } from "react-native";
+import { useAuthStore } from "../../src/store/authStore";
 
 export default function TabLayout() {
+  const { user } = useAuthStore();
+  const isOfficer = user?.role === "officer";
+
   return (
     <Tabs
       screenOptions={{
@@ -31,6 +35,7 @@ export default function TabLayout() {
         options={{
           title: "Scan QR",
           headerTitle: "Scan QR Petugas",
+          href: isOfficer ? null : "/(tabs)/scan",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="qr-code" size={size} color={color} />
           ),
@@ -41,6 +46,7 @@ export default function TabLayout() {
         options={{
           title: "Laporan",
           headerTitle: "Laporan Parkir Ilegal",
+          href: isOfficer ? null : "/(tabs)/report",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="document-text" size={size} color={color} />
           ),
@@ -53,6 +59,16 @@ export default function TabLayout() {
           headerTitle: "Riwayat Pembayaran",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="time" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profil",
+          headerTitle: "Profil Akun",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person" size={size} color={color} />
           ),
         }}
       />

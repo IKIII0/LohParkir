@@ -1,6 +1,8 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Ganti localhost dengan URL Tunnel Anda (misal dari ngrok/localtunnel) atau IP lokal PC Anda
+// Contoh: const BASE_URL = 'https://lohparkir-tunnel.localtunnel.me/api/v1';
 const BASE_URL = 'http://localhost:3001/api/v1';
 
 const api = axios.create({

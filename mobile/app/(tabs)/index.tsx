@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -7,11 +7,18 @@ import {
   TouchableOpacity,
   RefreshControl,
   Animated,
+  TextInput,
+  Alert,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { dashboardApi } from "../../src/services/api";
+import * as Location from "expo-location";
+import { dashboardApi, transactionApi, emergencyApi } from "../../src/services/api";
+import { useAuthStore } from "../../src/store/authStore";
 
 interface PublicStats {
   totalScan: number;
@@ -21,9 +28,17 @@ interface PublicStats {
 }
 
 export default function HomeScreen() {
+  const { user, isLoggedIn } = useAuthStore();
   const [stats, setStats] = useState<PublicStats | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const fadeAnim = new Animated.Value(0);
+  
+  // Officer States
+  const [nominal, setNominal] = useState("");
+  const [recordingCash, setRecordingCash] = useState(false);
+  const [sendingEmergency, setSendingEmergency] = useState(false);
+
+  // Persistent Animated Value fixing screen disappearing bug
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     loadStats();
@@ -49,16 +64,250 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
+  const handlePanic = async () => {
+    Alert.alert(
+      "Peringatan Darurat",
+      "Apakah Anda yakin ingin mengirim sinyal darurat? Semua Admin Dishub akan menerima lokasi GPS Anda secara real-time.",
+      [
+        { text: "Batal", style: "cancel" },
+        {
+          text: "YA, KIRIM ALARM",
+          style: "destructive",
+          onPress: async () => {
+            setSendingEmergency(true);
+            try {
+              const { status } = await Location.requestForegroundPermissionsAsync();
+              if (status !== "granted") {
+                Alert.alert(
+                  "Izin Lokasi Diperlukan",
+                  "Aplikasi membutuhkan izin lokasi GPS untuk mengirimkan alarm darurat."
+                );
+                return;
+              }
+              const loc = await Location.getCurrentPositionAsync({
+                accuracy: Location.Accuracy.High,
+              });
+              await emergencyApi.panic(loc.coords.latitude, loc.coords.longitude);
+              Alert.alert(
+                "Alarm Terkirim",
+                "Sinyal darurat telah dikirim ke semua Admin Dishub Medan beserta koordinat GPS Anda."
+              );
+            } catch (err: any) {
+              Alert.alert(
+                "Gagal Mengirim Alarm",
+                err.response?.data?.message || "Koneksi ke server gagal. Coba lagi."
+              );
+            } finally {
+              setSendingEmergency(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleRecordCash = async (customNominal?: number) => {
+    const valueToRecord = customNominal || parseInt(nominal);
+    if (!valueToRecord || isNaN(valueToRecord) || valueToRecord <= 0) {
+      Alert.alert("Nominal Tidak Valid", "Masukkan nominal uang pembayaran.");
+      return;
+    }
+
+    const officerId = user?.officerId;
+    if (!officerId) {
+      Alert.alert(
+        "Petugas Tidak Valid",
+        "Gagal mendapatkan ID Petugas Anda. Silakan keluar dan login kembali."
+      );
+      return;
+    }
+
+    setRecordingCash(true);
+    try {
+      await transactionApi.create({
+        officerId,
+        nominal: valueToRecord,
+        metode: "tunai",
+      });
+      Alert.alert(
+        "Berhasil Dicatat",
+        `Pembayaran tunai sebesar Rp ${valueToRecord.toLocaleString("id")} berhasil direkam.`
+      );
+      setNominal("");
+    } catch (err: any) {
+      Alert.alert(
+        "Gagal Mencatat",
+        err.response?.data?.message || "Terjadi kesalahan saat mencatat pembayaran tunai."
+      );
+    } finally {
+      setRecordingCash(false);
+    }
+  };
+
+  // ─── VIEW 1: DASHBOARD PETUGAS ─────────────────────────────────────────────
+  if (isLoggedIn && user?.role === "officer") {
+    return (
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={styles.content}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1a237e" />
+          }
+        >
+          {/* Officer Hero */}
+          <LinearGradient
+            colors={["#e65100", "#ef6c00", "#f57c00"]}
+            style={styles.hero}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <View style={styles.heroContent}>
+              <View style={styles.heroLogo}>
+                <Ionicons name="card" size={40} color="#ffeb3b" />
+              </View>
+              <Text style={styles.heroTitle}>LohParkir Petugas</Text>
+              <Text style={styles.heroSubtitle}>
+                Halo, {user.nama}!{"\n"}Petugas Resmi Dinas Perhubungan Medan
+              </Text>
+            </View>
+          </LinearGradient>
+
+          {/* Emergency Panic Section */}
+          <View style={styles.officerSection}>
+            <Text style={styles.sectionTitle}>Tombol Panik Darurat (Panic Button)</Text>
+            <Text style={styles.sectionSubtitle}>
+              Tekan jika terjadi tindak kriminal, pemerasan, atau kondisi darurat di lapangan.
+            </Text>
+
+            <TouchableOpacity
+              style={styles.panicButton}
+              onPress={handlePanic}
+              disabled={sendingEmergency}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={["#d50000", "#c62828"]}
+                style={styles.panicButtonCircle}
+              >
+                {sendingEmergency ? (
+                  <ActivityIndicator size="large" color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name="alert-circle" size={48} color="#fff" />
+                    <Text style={styles.panicButtonText}>DARURAT</Text>
+                  </>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+
+          {/* Cash Logging Section */}
+          <View style={styles.officerSection}>
+            <Text style={styles.sectionTitle}>Catat Pembayaran Tunai</Text>
+            <Text style={styles.sectionSubtitle}>
+              Catat setiap pembayaran parkir tunai yang diterima dari pengendara.
+            </Text>
+
+            {/* Quick nominal buttons */}
+            <View style={styles.quickNominals}>
+              <TouchableOpacity
+                style={styles.quickButton}
+                onPress={() => handleRecordCash(2000)}
+                disabled={recordingCash}
+              >
+                <Text style={styles.quickButtonText}>Rp 2.000</Text>
+                <Text style={styles.quickButtonSub}>Motor</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.quickButton}
+                onPress={() => handleRecordCash(5000)}
+                disabled={recordingCash}
+              >
+                <Text style={styles.quickButtonText}>Rp 5.000</Text>
+                <Text style={styles.quickButtonSub}>Mobil</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Custom nominal input */}
+            <View style={styles.customNominalContainer}>
+              <Text style={styles.customNominalLabel}>Nominal Lainnya (Rp)</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.cashInput}
+                  placeholder="Contoh: 10000"
+                  keyboardType="numeric"
+                  value={nominal}
+                  onChangeText={setNominal}
+                  disabled={recordingCash}
+                />
+                <TouchableOpacity
+                  style={styles.recordButton}
+                  onPress={() => handleRecordCash()}
+                  disabled={recordingCash}
+                >
+                  {recordingCash ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Ionicons name="checkmark-done" size={20} color="#fff" />
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    );
+  }
+
+  // ─── VIEW 2: DASHBOARD ADMIN ───────────────────────────────────────────────
+  if (isLoggedIn && (user?.role === "admin" || user?.role === "superadmin")) {
+    return (
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1a237e" />
+        }
+      >
+        <LinearGradient
+          colors={["#1a237e", "#283593"]}
+          style={styles.hero}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.heroContent}>
+            <View style={styles.heroLogo}>
+              <Ionicons name="shield" size={40} color="#ffeb3b" />
+            </View>
+            <Text style={styles.heroTitle}>LohParkir Admin</Text>
+            <Text style={styles.heroSubtitle}>
+              Selamat datang, {user.nama}!{"\n"}Administrator Sistem
+            </Text>
+          </View>
+        </LinearGradient>
+
+        <View style={styles.adminMessageCard}>
+          <Ionicons name="desktop-outline" size={50} color="#1a237e" />
+          <Text style={styles.adminMessageTitle}>Gunakan Admin Web Dashboard</Text>
+          <Text style={styles.adminMessageText}>
+            Manajemen lengkap akun petugas, generate QR badge, analisis heatmap, verifikasi laporan
+            parkir ilegal, serta audit trail dilakukan secara penuh melalui portal web admin.
+          </Text>
+        </View>
+      </ScrollView>
+    );
+  }
+
+  // ─── VIEW 3: DASHBOARD PUBLIK (DEFAULT) ────────────────────────────────────
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
       refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor="#1a237e"
-        />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1a237e" />
       }
     >
       {/* Hero Banner */}
@@ -97,15 +346,9 @@ export default function HomeScreen() {
             <Ionicons name="qr-code" size={28} color="#fff" />
             <View style={styles.buttonTextContainer}>
               <Text style={styles.primaryButtonText}>Scan QR Petugas</Text>
-              <Text style={styles.primaryButtonSubtext}>
-                Verifikasi keaslian petugas parkir
-              </Text>
+              <Text style={styles.primaryButtonSubtext}>Verifikasi keaslian petugas parkir</Text>
             </View>
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color="rgba(255,255,255,0.7)"
-            />
+            <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
           </LinearGradient>
         </TouchableOpacity>
 
@@ -119,9 +362,7 @@ export default function HomeScreen() {
               <Ionicons name="warning" size={24} color="#e65100" />
             </View>
             <View style={styles.buttonTextContainer}>
-              <Text style={styles.secondaryButtonText}>
-                Laporkan Parkir Ilegal
-              </Text>
+              <Text style={styles.secondaryButtonText}>Laporkan Parkir Ilegal</Text>
               <Text style={styles.secondaryButtonSubtext}>
                 Bantu jaga ketertiban parkir Kota Medan
               </Text>
@@ -141,9 +382,7 @@ export default function HomeScreen() {
             </View>
             <View style={styles.buttonTextContainer}>
               <Text style={styles.secondaryButtonText}>Riwayat Pembayaran</Text>
-              <Text style={styles.secondaryButtonSubtext}>
-                Lihat transaksi parkir Anda
-              </Text>
+              <Text style={styles.secondaryButtonSubtext}>Lihat transaksi parkir Anda</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#9e9e9e" />
           </View>
@@ -189,9 +428,9 @@ export default function HomeScreen() {
         <View style={styles.warningContent}>
           <Text style={styles.warningTitle}>⚠️ Waspada Petugas Palsu!</Text>
           <Text style={styles.warningText}>
-            Selalu minta petugas menunjukkan QR Badge resmi sebelum membayar.
-            Petugas resmi Dishub Medan wajib memiliki badge digital
-            terverifikasi. Jangan bayar kepada yang tidak bisa diverifikasi!
+            Selalu minta petugas menunjukkan QR Badge resmi sebelum membayar. Petugas resmi Dishub
+            Medan wajib memiliki badge digital terverifikasi. Jangan bayar kepada yang tidak bisa
+            diverifikasi!
           </Text>
         </View>
       </View>
@@ -200,8 +439,8 @@ export default function HomeScreen() {
       <View style={styles.infoBanner}>
         <Ionicons name="information-circle" size={20} color="#1565c0" />
         <Text style={styles.infoText}>
-          LohParkir hanya mencakup parkir tepi jalan resmi yang dikelola Dinas
-          Perhubungan Kota Medan.
+          LohParkir hanya mencakup parkir tepi jalan resmi yang dikelola Dinas Perhubungan Kota
+          Medan.
         </Text>
       </View>
     </ScrollView>
@@ -373,4 +612,136 @@ const styles = StyleSheet.create({
   warningContent: { flex: 1, gap: 4 },
   warningTitle: { fontSize: 14, fontWeight: "700", color: "#bf360c" },
   warningText: { fontSize: 13, color: "#e65100", lineHeight: 20 },
+
+  // Officer-specific Styles
+  officerSection: {
+    backgroundColor: "#ffffff",
+    borderRadius: 20,
+    margin: 20,
+    padding: 20,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+  },
+  sectionSubtitle: {
+    fontSize: 13,
+    color: "#757575",
+    marginTop: 2,
+    marginBottom: 16,
+    lineHeight: 18,
+  },
+  panicButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 12,
+  },
+  panicButtonCircle: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 6,
+    shadowColor: "#d50000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    gap: 6,
+  },
+  panicButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "800",
+    letterSpacing: 1,
+  },
+  quickNominals: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 20,
+  },
+  quickButton: {
+    flex: 1,
+    backgroundColor: "#fff3e0",
+    borderWidth: 1.5,
+    borderColor: "#ffe0b2",
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: "center",
+    elevation: 1,
+  },
+  quickButtonText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#e65100",
+  },
+  quickButtonSub: {
+    fontSize: 11,
+    color: "#e65100",
+    marginTop: 2,
+  },
+  customNominalContainer: {
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
+    paddingTop: 16,
+  },
+  customNominalLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#1a1a1a",
+    marginBottom: 8,
+  },
+  inputWrapper: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  cashInput: {
+    flex: 1,
+    borderWidth: 1.5,
+    borderColor: "#e0e0e0",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 48,
+    fontSize: 15,
+    color: "#1a1a1a",
+    backgroundColor: "#fafafa",
+  },
+  recordButton: {
+    width: 54,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: "#e65100",
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 2,
+  },
+
+  // Admin-specific Styles
+  adminMessageCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 20,
+    margin: 20,
+    padding: 30,
+    alignItems: "center",
+    textAlign: "center",
+    gap: 16,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+  },
+  adminMessageTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1a237e",
+    textAlign: "center",
+  },
+  adminMessageText: {
+    fontSize: 13,
+    color: "#757575",
+    lineHeight: 20,
+    textAlign: "center",
+  },
 });

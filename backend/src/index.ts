@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
+import fs from 'fs';
 import { globalRateLimiter } from './middleware/rateLimiter';
 import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
@@ -44,6 +45,11 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(globalRateLimiter);
 app.use(requestLogger);
+
+// Ensure upload directory exists
+if (!fs.existsSync(env.UPLOAD_DIR)) {
+  fs.mkdirSync(env.UPLOAD_DIR, { recursive: true });
+}
 
 // Static files (uploaded photos)
 app.use('/uploads', express.static(env.UPLOAD_DIR));
