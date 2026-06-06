@@ -181,7 +181,7 @@ export default function RegisterScreen() {
                 placeholder="Masukkan nama lengkap Anda"
                 value={nama}
                 onChangeText={setNama}
-                disabled={isLoading}
+                editable={!isLoading}
               />
             </View>
           </View>
@@ -198,7 +198,7 @@ export default function RegisterScreen() {
                 onChangeText={setEmail}
                 autoCapitalize="none"
                 keyboardType="email-address"
-                disabled={isLoading}
+                editable={!isLoading}
               />
             </View>
           </View>
@@ -215,7 +215,7 @@ export default function RegisterScreen() {
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
-                disabled={isLoading}
+                editable={!isLoading}
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
@@ -244,7 +244,7 @@ export default function RegisterScreen() {
                     value={nip}
                     onChangeText={setNip}
                     keyboardType="numeric"
-                    disabled={isLoading}
+                    editable={!isLoading}
                   />
                 </View>
               </View>
@@ -260,7 +260,7 @@ export default function RegisterScreen() {
                     value={nomorHp}
                     onChangeText={setNomorHp}
                     keyboardType="phone-pad"
-                    disabled={isLoading}
+                    editable={!isLoading}
                   />
                 </View>
               </View>
