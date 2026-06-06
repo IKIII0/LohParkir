@@ -61,12 +61,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen flex bg-[#f8fafc] font-sans antialiased text-slate-800">
       {/* Mobile Overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 lg:hidden transition-opacity" onClick={() => setSidebarOpen(false)} />
-      )}
+      <div
+        className={`sidebar-overlay ${sidebarOpen ? 'active' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      />
 
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0a0f2c] border-r border-slate-800/40 flex flex-col transition-all duration-300 shadow-2xl lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`sidebar bg-[#0a0f2c] border-r border-slate-800/40 flex flex-col shadow-2xl ${sidebarOpen ? 'sidebar-open' : ''}`}>
         
         {/* Decorative subtle top glow */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-yellow-400" />
@@ -82,7 +83,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </span>
             <p className="text-slate-400 text-xs font-semibold tracking-wider uppercase">Dishub Kota Medan</p>
           </div>
-          <button className="ml-auto lg:hidden text-slate-400 hover:text-white transition-colors" onClick={() => setSidebarOpen(false)}>
+          <button className="sidebar-close-btn ml-auto text-slate-400 hover:text-white transition-colors" onClick={() => setSidebarOpen(false)}>
             <X size={18} />
           </button>
         </div>
@@ -135,12 +136,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 lg:ml-64 flex flex-col min-h-screen">
+      <div className="main-content">
 
         {/* Top Floating Glass Header */}
-        <header className="sticky top-0 z-35 bg-white/80 backdrop-blur-md border-b border-slate-200/60 shadow-sm px-6 h-16 flex items-center justify-between">
+        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200/60 shadow-sm px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button className="lg:hidden text-slate-600 p-2 hover:bg-slate-100 rounded-lg transition-colors" onClick={() => setSidebarOpen(true)}>
+            <button className="hamburger-btn text-slate-600 p-2 hover:bg-slate-100 rounded-lg transition-colors" onClick={() => setSidebarOpen(true)}>
               <Menu size={20} />
             </button>
 
@@ -160,7 +161,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Notifications Panel Trigger */}
             <button id="notifications-btn" className="relative p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all">
               <Bell size={19} />
@@ -172,7 +173,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </button>
 
             {/* Logout Button */}
-            <button onClick={handleLogout} className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-rose-600 transition-all px-3 py-2 hover:bg-rose-50 rounded-xl">
+            <button onClick={handleLogout} className="flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-rose-600 transition-all px-2 sm:px-3 py-2 hover:bg-rose-50 rounded-xl">
               <LogOut size={16} />
               <span className="hidden sm:block">Keluar</span>
             </button>
@@ -180,7 +181,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Page Content with soft background */}
-        <main className="flex-1 p-6 md:p-8 bg-[#f8fafc] overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-6 md:p-8 bg-[#f8fafc] overflow-auto">
           {children}
         </main>
 

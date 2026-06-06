@@ -1,9 +1,43 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { authApi } from '@/lib/api';
 import { toast } from 'react-hot-toast';
-import { ShieldCheck, Eye, EyeOff, AlertCircle, Lock, Mail, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Eye, EyeOff, AlertCircle, Lock, Mail, ArrowRight, WifiOff } from 'lucide-react';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+
+async function loginRequest(email: string, password: string) {
+  const res = await fetch(`${API_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw { status: res.status, message: data.message || 'Login gagal' };
+  return data;
+}
+
+function getErrorMessage(err: any): string {
+  // Network error — backend tidak bisa dijangkau
+  if (err instanceof TypeError && err.message.includes('fetch')) {
+    return 'Server tidak bisa dijangkau. Pastikan backend berjalan di port 3001.';
+  }
+  // Rate limit
+  if (err.status === 429) {
+    return 'Terlalu banyak percobaan login. Coba lagi dalam 15 menit.';
+  }
+  // Forbidden — role tidak punya akses
+  if (err.status === 403) {
+    return err.message || 'Akun ini tidak memiliki akses ke Dashboard Admin.';
+  }
+  // Wrong credentials
+  if (err.status === 401) {
+    return 'Email atau password salah.';
+  }
+  // Pesan dari server
+  if (err.message) return err.message;
+  return 'Terjadi kesalahan. Coba lagi.';
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,27 +47,49 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [focused, setFocused] = useState<string | null>(null);
+  const [backendOnline, setBackendOnline] = useState<boolean | null>(null);
+
+  // Cek koneksi backend saat halaman dibuka
+  useEffect(() => {
+    const checkBackend = async () => {
+      try {
+        const res = await fetch(`${API_URL.replace('/api/v1', '')}/health`, { signal: AbortSignal.timeout(4000) });
+        setBackendOnline(res.ok);
+      } catch {
+        setBackendOnline(false);
+      }
+    };
+    checkBackend();
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
 
+    if (!email.trim() || !password.trim()) {
+      setError('Email dan password wajib diisi.');
+      return;
+    }
+
+    setLoading(true);
     try {
-      const res = await authApi.login(email, password);
-      const { accessToken, refreshToken, user } = res.data.data;
+      const res = await loginRequest(email.trim(), password);
+      const { accessToken, refreshToken, user } = res.data;
+
       if (!['admin', 'superadmin'].includes(user.role)) {
-        setError('Akun Anda tidak memiliki akses ke Dashboard Admin');
+        setError('Akun Anda tidak memiliki akses ke Dashboard Admin. Hanya admin dan superadmin yang diizinkan.');
         setLoading(false);
         return;
       }
+
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
       localStorage.setItem('user', JSON.stringify(user));
       toast.success(`Selamat datang, ${user.nama}!`);
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Terjadi kesalahan. Coba lagi.');
+      setError(getErrorMessage(err));
+      setBackendOnline(!(err instanceof TypeError));
     } finally {
       setLoading(false);
     }
@@ -48,7 +104,7 @@ export default function LoginPage() {
       background: '#080f3d',
     }}>
       {/* ===== LEFT PANEL: Branding ===== */}
-      <div style={{
+      <div className="login-left-panel" style={{
         flex: '1',
         display: 'flex',
         flexDirection: 'column',
@@ -160,13 +216,11 @@ export default function LoginPage() {
       </div>
 
       {/* ===== RIGHT PANEL: Login Form ===== */}
-      <div style={{
-        width: '480px',
-        minWidth: '480px',
+      <div className="login-right-panel" style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '40px',
+        padding: '40px 24px',
         background: '#f8f9ff',
         position: 'relative',
       }}>
@@ -179,7 +233,7 @@ export default function LoginPage() {
 
         <div style={{ width: '100%', maxWidth: '380px' }}>
           {/* Header */}
-          <div style={{ marginBottom: '36px' }}>
+          <div style={{ marginBottom: '28px' }}>
             <h2 style={{ fontSize: '26px', fontWeight: 800, color: '#0d1757', letterSpacing: '-0.02em', marginBottom: '6px' }}>
               Selamat Datang
             </h2>
@@ -187,6 +241,24 @@ export default function LoginPage() {
               Masuk untuk mengakses dashboard admin
             </p>
           </div>
+
+          {/* Backend status warning */}
+          {backendOnline === false && (
+            <div style={{
+              display: 'flex', alignItems: 'flex-start', gap: '10px',
+              background: '#fff7ed', border: '1px solid #fdba74',
+              borderRadius: '12px', padding: '12px 16px',
+              marginBottom: '16px',
+            }}>
+              <WifiOff size={16} color="#ea580c" style={{ marginTop: '1px', flexShrink: 0 }} />
+              <div>
+                <p style={{ fontSize: '12px', fontWeight: 700, color: '#c2410c', marginBottom: '2px' }}>Server Offline</p>
+                <p style={{ fontSize: '12px', color: '#9a3412', lineHeight: 1.5 }}>
+                  Backend tidak bisa dijangkau. Jalankan: <code style={{ background: '#fef3c7', padding: '1px 4px', borderRadius: '4px', fontFamily: 'monospace' }}>npm run dev</code> di folder <code style={{ background: '#fef3c7', padding: '1px 4px', borderRadius: '4px', fontFamily: 'monospace' }}>/backend</code>
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Error Alert */}
           {error && (
@@ -226,6 +298,7 @@ export default function LoginPage() {
                   onFocus={() => setFocused('email')}
                   onBlur={() => setFocused(null)}
                   required
+                  autoComplete="email"
                   placeholder="admin@dishubmedan.id"
                   style={{
                     width: '100%', padding: '13px 14px 13px 42px',
@@ -235,6 +308,7 @@ export default function LoginPage() {
                     fontSize: '14px', color: '#111827',
                     outline: 'none', transition: 'all 0.2s',
                     boxShadow: focused === 'email' ? '0 0 0 4px rgba(26,35,126,0.08)' : 'none',
+                    boxSizing: 'border-box',
                   }}
                 />
               </div>
@@ -262,6 +336,7 @@ export default function LoginPage() {
                   onFocus={() => setFocused('password')}
                   onBlur={() => setFocused(null)}
                   required
+                  autoComplete="current-password"
                   placeholder="••••••••"
                   style={{
                     width: '100%', padding: '13px 48px 13px 42px',
@@ -271,6 +346,7 @@ export default function LoginPage() {
                     fontSize: '14px', color: '#111827',
                     outline: 'none', transition: 'all 0.2s',
                     boxShadow: focused === 'password' ? '0 0 0 4px rgba(26,35,126,0.08)' : 'none',
+                    boxSizing: 'border-box',
                   }}
                 />
                 <button
@@ -294,18 +370,20 @@ export default function LoginPage() {
             <button
               id="login-submit"
               type="submit"
-              disabled={loading}
+              disabled={loading || backendOnline === false}
               style={{
                 width: '100%', padding: '14px',
-                background: loading ? '#c5cae9' : 'linear-gradient(135deg, #1a237e 0%, #3949ab 100%)',
+                background: (loading || backendOnline === false) ? '#c5cae9' : 'linear-gradient(135deg, #1a237e 0%, #3949ab 100%)',
                 color: '#ffffff', fontWeight: 700, fontSize: '15px',
-                borderRadius: '12px', border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
+                borderRadius: '12px', border: 'none',
+                cursor: (loading || backendOnline === false) ? 'not-allowed' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                 transition: 'all 0.2s',
-                boxShadow: loading ? 'none' : '0 4px 20px rgba(26,35,126,0.4)',
+                boxShadow: (loading || backendOnline === false) ? 'none' : '0 4px 20px rgba(26,35,126,0.4)',
                 letterSpacing: '0.01em', marginTop: '4px',
+                boxSizing: 'border-box',
               }}
-              onMouseEnter={e => { if (!loading) e.currentTarget.style.transform = 'translateY(-1px)'; }}
+              onMouseEnter={e => { if (!loading && backendOnline !== false) e.currentTarget.style.transform = 'translateY(-1px)'; }}
               onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
             >
               {loading ? (
@@ -335,7 +413,7 @@ export default function LoginPage() {
             </span>
           </p>
 
-          {/* Divider */}
+          {/* Security badge */}
           <div style={{
             margin: '28px 0 0', padding: '16px 0 0',
             borderTop: '1px solid #e5e7eb',
@@ -348,7 +426,7 @@ export default function LoginPage() {
             }}>
               <ShieldCheck size={14} color="#2e7d32" />
               <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 500 }}>
-                Koneksi terenkripsi & aman
+                Koneksi terenkripsi &amp; aman
               </span>
             </div>
           </div>
@@ -377,8 +455,34 @@ export default function LoginPage() {
         }
         * { box-sizing: border-box; }
 
-        @media (max-width: 900px) {
-          .left-panel { display: none !important; }
+        /* Desktop: two-column layout */
+        .login-right-panel {
+          width: 480px;
+          min-width: 480px;
+        }
+        .login-left-panel {
+          display: flex;
+        }
+
+        /* Mobile: full-width single column */
+        @media (max-width: 768px) {
+          .login-left-panel { display: none !important; }
+          .login-right-panel {
+            width: 100% !important;
+            min-width: 0 !important;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #080f3d 0%, #f8f9ff 35%) !important;
+            padding: 40px 20px !important;
+            align-items: flex-start !important;
+          }
+        }
+
+        /* Tablet: narrower right panel */
+        @media (min-width: 769px) and (max-width: 1024px) {
+          .login-right-panel {
+            width: 400px;
+            min-width: 400px;
+          }
         }
       `}</style>
     </div>

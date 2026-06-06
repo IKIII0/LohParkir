@@ -46,7 +46,7 @@ function StatCard({
   icon: any; label: string; value: string | number; sub?: string; color: string; trend?: 'up' | 'down' | null;
 }) {
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-slate-100 hover:border-slate-200 hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+    <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-slate-100 hover:border-slate-200 hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
       {/* Subtle background glow on hover */}
       <div 
         className="absolute -right-6 -bottom-6 w-24 h-24 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-300"
@@ -54,11 +54,12 @@ function StatCard({
       />
       
       <div className="flex items-start justify-between">
-        <div className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shadow-sm" style={{ backgroundColor: color + '12' }}>
-          <Icon size={24} style={{ color }} />
+        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shadow-sm" style={{ backgroundColor: color + '12' }}>
+          <Icon size={20} style={{ color }} className="sm:hidden" />
+          <Icon size={24} style={{ color }} className="hidden sm:block" />
         </div>
         {trend && (
-          <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-full flex items-center gap-1 ${
+          <span className={`text-[10px] sm:text-[11px] font-extrabold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full flex items-center gap-1 ${
             trend === 'up' 
               ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' 
               : 'bg-rose-50 text-rose-700 border border-rose-100'
@@ -68,10 +69,10 @@ function StatCard({
         )}
       </div>
       
-      <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mt-4">{label}</p>
-      <p className="text-3xl font-extrabold text-slate-900 mt-1 tracking-tight">{value}</p>
+      <p className="text-slate-500 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mt-3 sm:mt-4">{label}</p>
+      <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1 tracking-tight">{value}</p>
       {sub && (
-        <div className="flex items-center gap-1.5 mt-2 text-xs text-slate-400 font-medium border-t border-slate-50/80 pt-2">
+        <div className="flex items-center gap-1.5 mt-2 text-[10px] sm:text-xs text-slate-400 font-medium border-t border-slate-50/80 pt-2">
           <span>{sub}</span>
         </div>
       )}
@@ -84,10 +85,11 @@ export default function DashboardPage() {
   const [trend, setTrend] = useState<TrendData[]>([]);
   const [revenue, setRevenue] = useState<RevenueData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
+    setLastRefresh(new Date()); // set di client untuk hindari hydration mismatch
     loadAll();
     // WebSocket for real-time updates
     connectWs();
@@ -145,18 +147,18 @@ export default function DashboardPage() {
   const fmtRp = (n: number) => `Rp ${n?.toLocaleString('id') || '0'}`;
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
+    <div className="space-y-5 sm:space-y-8 max-w-7xl mx-auto">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Dashboard Monitoring</h1>
-          <p className="text-sm font-medium text-slate-500 mt-1">
-            Update terakhir: {format(lastRefresh, 'HH:mm:ss', { locale: id })} WIB
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight">Dashboard Monitoring</h1>
+          <p className="text-xs sm:text-sm font-medium text-slate-500 mt-1">
+            Update terakhir: {lastRefresh ? format(lastRefresh, 'HH:mm:ss', { locale: id }) : '--:--:--'} WIB
           </p>
         </div>
         <button
           onClick={loadAll}
-          className="flex items-center justify-center gap-2 bg-slate-900 text-white hover:bg-slate-800 active:scale-95 px-5 py-3 rounded-xl text-sm font-bold shadow-md shadow-slate-900/10 transition-all cursor-pointer"
+          className="self-start sm:self-auto flex items-center justify-center gap-2 bg-slate-900 text-white hover:bg-slate-800 active:scale-95 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl text-sm font-bold shadow-md shadow-slate-900/10 transition-all cursor-pointer"
         >
           <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
           Refresh Data
@@ -164,7 +166,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         <StatCard icon={QrCode} label="Total Scan Hari Ini" value={fmt(stats?.total_scan_hari_ini || 0)}
           sub={`${fmt(stats?.scan_valid || 0)} valid · ${fmt(stats?.scan_invalid || 0)} tidak valid`}
           color="#3b82f6" trend="up" />
@@ -178,18 +180,18 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6">
 
         {/* Scan Trend Chart */}
-        <div className="lg:col-span-3 bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-slate-100 flex flex-col justify-between">
+        <div className="lg:col-span-3 bg-white rounded-2xl p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-slate-100 flex flex-col justify-between">
           <div>
-            <h2 className="font-extrabold text-slate-800 text-lg flex items-center gap-2">
-              <TrendingUp size={20} className="text-blue-500" />
+            <h2 className="font-extrabold text-slate-800 text-base sm:text-lg flex items-center gap-2">
+              <TrendingUp size={18} className="text-blue-500" />
               Tren Validasi QR (14 Hari Terakhir)
             </h2>
-            <p className="text-xs text-slate-400 font-medium mt-0.5 mb-6">Distribusi harian scan valid vs tidak valid</p>
+            <p className="text-xs text-slate-400 font-medium mt-0.5 mb-4 sm:mb-6">Distribusi harian scan valid vs tidak valid</p>
           </div>
-          <ResponsiveContainer width="100%" height={220}>
+          <ResponsiveContainer width="100%" height={200}>
             <LineChart data={trend}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="periode" tickFormatter={(v) => format(new Date(v), 'dd/MM')} tick={{ fontSize: 11, fill: '#64748b' }} />
@@ -203,10 +205,10 @@ export default function DashboardPage() {
         </div>
 
         {/* Pie Chart */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-slate-100 flex flex-col justify-between">
+        <div className="lg:col-span-2 bg-white rounded-2xl p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-slate-100 flex flex-col justify-between">
           <div>
-            <h2 className="font-extrabold text-slate-800 text-lg">Komposisi Scan Hari Ini</h2>
-            <p className="text-xs text-slate-400 font-medium mt-0.5 mb-6">Persentase keaslian scan juru parkir</p>
+            <h2 className="font-extrabold text-slate-800 text-base sm:text-lg">Komposisi Scan Hari Ini</h2>
+            <p className="text-xs text-slate-400 font-medium mt-0.5 mb-4 sm:mb-6">Persentase keaslian scan juru parkir</p>
           </div>
           {stats && (stats.scan_valid + stats.scan_invalid) > 0 ? (
             <ResponsiveContainer width="100%" height={180}>
@@ -237,13 +239,13 @@ export default function DashboardPage() {
       </div>
 
       {/* Revenue Chart */}
-      <div className="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-slate-100">
-        <h2 className="font-extrabold text-slate-800 text-lg flex items-center gap-2 mb-1">
-          <DollarSign size={20} className="text-emerald-500" />
+      <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-slate-100">
+        <h2 className="font-extrabold text-slate-800 text-base sm:text-lg flex items-center gap-2 mb-1">
+          <DollarSign size={18} className="text-emerald-500" />
           Pendapatan Parkir (14 Hari Terakhir)
         </h2>
-        <p className="text-xs text-slate-400 font-medium mb-6">Perbandingan pendapatan melalui QRIS vs Tunai</p>
-        <ResponsiveContainer width="100%" height={220}>
+        <p className="text-xs text-slate-400 font-medium mb-4 sm:mb-6">Perbandingan pendapatan melalui QRIS vs Tunai</p>
+        <ResponsiveContainer width="100%" height={200}>
           <BarChart data={revenue}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
             <XAxis dataKey="tanggal" tickFormatter={(v) => format(new Date(v), 'dd/MM')} tick={{ fontSize: 11, fill: '#64748b' }} />
