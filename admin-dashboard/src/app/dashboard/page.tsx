@@ -8,7 +8,7 @@ import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
-import { dashboardApi } from '@/lib/api';
+import { dashboardApi, BASE_URL, getWsUrl } from '@/lib/api';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 
@@ -102,7 +102,7 @@ export default function DashboardPage() {
 
   const connectWs = () => {
     try {
-      const ws = new WebSocket('ws://localhost:3001');
+      const ws = new WebSocket(getWsUrl(BASE_URL));
       ws.onmessage = (event) => {
         const msg = JSON.parse(event.data);
         if (['SCAN_EVENT', 'NEW_REPORT', 'NEW_TRANSACTION'].includes(msg.event)) {

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Search, Eye, ChevronRight, CheckCircle, Clock, XCircle, AlertCircle } from 'lucide-react';
-import { reportsApi } from '@/lib/api';
+import { reportsApi, BASE_URL, getBackendOrigin } from '@/lib/api';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
@@ -159,7 +159,7 @@ export default function ReportsPage() {
                 {/* Photo */}
                 {selected.foto_url && (
                   <img
-                    src={`http://localhost:3001${selected.foto_url}`}
+                    src={`${getBackendOrigin(BASE_URL)}${selected.foto_url}`}
                     alt="Foto bukti"
                     className="w-full h-48 object-cover rounded-xl bg-gray-100"
                     onError={(e: any) => { e.target.src = 'https://placehold.co/400x200?text=Foto+Bukti'; }}

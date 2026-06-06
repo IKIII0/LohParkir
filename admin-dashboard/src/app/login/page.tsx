@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { ShieldCheck, Eye, EyeOff, AlertCircle, Lock, Mail, ArrowRight, WifiOff } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://lohparkir-production.up.railway.app/api/v1';
 
 async function loginRequest(email: string, password: string) {
   const res = await fetch(`${API_URL}/auth/login`, {

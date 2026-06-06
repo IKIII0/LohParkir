@@ -1,6 +1,26 @@
 import axios from 'axios';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://lohparkir-production.up.railway.app/api/v1';
+export const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://lohparkir-production.up.railway.app/api/v1';
+
+export const getBackendOrigin = (apiUrl: string) => {
+  try {
+    return new URL(apiUrl).origin;
+  } catch {
+    return apiUrl.replace(/\/api\/v1\/?$/, '');
+  }
+};
+
+export const getWsUrl = (apiUrl: string) => {
+  try {
+    const parsed = new URL(apiUrl);
+    const protocol = parsed.protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${protocol}//${parsed.host}`;
+  } catch {
+    return apiUrl.startsWith('https')
+      ? 'wss://lohparkir-production.up.railway.app'
+      : 'ws://localhost:3001';
+  }
+};
 
 const api = axios.create({ baseURL: BASE_URL });
 

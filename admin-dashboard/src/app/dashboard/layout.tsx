@@ -7,6 +7,7 @@ import {
   Settings, Bell, LogOut, ShieldCheck, ChevronRight,
   AlertTriangle, Database, Menu, X
 } from 'lucide-react';
+import { BASE_URL, getBackendOrigin } from '@/lib/api';
 
 interface User {
   nama: string;
@@ -43,7 +44,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const checkDbStatus = async () => {
     try {
-      const res = await fetch('http://localhost:3001/health');
+      const res = await fetch(`${getBackendOrigin(BASE_URL)}/health`);
       setDbStatus(res.ok ? 'online' : 'offline');
     } catch {
       setDbStatus('offline');
