@@ -90,53 +90,84 @@ export default function RegisterScreen() {
 
         {/* Form Card */}
         <View style={styles.formCard}>
-          {/* Role Picker (Segmented Toggle) */}
+          
+          {/* Premium Role Cards Selector */}
           <Text style={styles.inputLabel}>Daftar Sebagai:</Text>
-          <View style={styles.rolePickerContainer}>
+          <View style={styles.roleCardsContainer}>
+            {/* Option 1: Public */}
             <TouchableOpacity
               style={[
-                styles.roleOption,
-                role === 'public' && styles.roleOptionActive,
+                styles.roleCard,
+                role === 'public' && styles.roleCardActivePublic,
               ]}
               onPress={() => setRole('public')}
               disabled={isLoading}
+              activeOpacity={0.8}
             >
-              <Ionicons
-                name="people"
-                size={18}
-                color={role === 'public' ? '#fff' : '#757575'}
-              />
-              <Text
-                style={[
-                  styles.roleOptionText,
-                  role === 'public' && styles.roleOptionTextActive,
-                ]}
-              >
-                Masyarakat Umum
-              </Text>
+              <View style={[
+                styles.roleCardIconBg,
+                role === 'public' && styles.roleCardIconBgActivePublic
+              ]}>
+                <Ionicons
+                  name="people"
+                  size={22}
+                  color={role === 'public' ? '#1a237e' : '#757575'}
+                />
+              </View>
+              <View style={styles.roleCardContent}>
+                <Text style={[
+                  styles.roleCardTitle,
+                  role === 'public' && styles.roleCardTitleActivePublic
+                ]}>
+                  Masyarakat Umum
+                </Text>
+                <Text style={styles.roleCardDesc}>
+                  Untuk verifikasi keaslian juru parkir & melaporkan parkir liar
+                </Text>
+              </View>
+              {role === 'public' && (
+                <View style={styles.checkBadge}>
+                  <Ionicons name="checkmark-circle" size={22} color="#1a237e" />
+                </View>
+              )}
             </TouchableOpacity>
 
+            {/* Option 2: Officer */}
             <TouchableOpacity
               style={[
-                styles.roleOption,
-                role === 'officer' && styles.roleOptionActive,
+                styles.roleCard,
+                role === 'officer' && styles.roleCardActiveOfficer,
               ]}
               onPress={() => setRole('officer')}
               disabled={isLoading}
+              activeOpacity={0.8}
             >
-              <Ionicons
-                name="card"
-                size={18}
-                color={role === 'officer' ? '#fff' : '#757575'}
-              />
-              <Text
-                style={[
-                  styles.roleOptionText,
-                  role === 'officer' && styles.roleOptionTextActive,
-                ]}
-              >
-                Petugas Parkir
-              </Text>
+              <View style={[
+                styles.roleCardIconBg,
+                role === 'officer' && styles.roleCardIconBgActiveOfficer
+              ]}>
+                <Ionicons
+                  name="card"
+                  size={22}
+                  color={role === 'officer' ? '#e65100' : '#757575'}
+                />
+              </View>
+              <View style={styles.roleCardContent}>
+                <Text style={[
+                  styles.roleCardTitle,
+                  role === 'officer' && styles.roleCardTitleActiveOfficer
+                ]}>
+                  Petugas Parkir (Jukir)
+                </Text>
+                <Text style={styles.roleCardDesc}>
+                  Untuk catat pembayaran tunai & kirim alarm darurat lapangan
+                </Text>
+              </View>
+              {role === 'officer' && (
+                <View style={styles.checkBadge}>
+                  <Ionicons name="checkmark-circle" size={22} color="#e65100" />
+                </View>
+              )}
             </TouchableOpacity>
           </View>
 
@@ -201,7 +232,7 @@ export default function RegisterScreen() {
 
           {/* Conditional Officer Fields */}
           {role === 'officer' && (
-            <Animated.View style={styles.officerFields}>
+            <View style={styles.officerFields}>
               {/* NIP Input */}
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>NIP / ID Petugas (Wajib)</Text>
@@ -233,7 +264,7 @@ export default function RegisterScreen() {
                   />
                 </View>
               </View>
-            </Animated.View>
+            </View>
           )}
 
           {/* Register Button */}
@@ -301,38 +332,72 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
   },
 
-  rolePickerContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
-    padding: 4,
+  // Premium Role Selection styles
+  roleCardsContainer: {
+    flexDirection: 'column',
+    gap: 12,
     marginBottom: 20,
-    gap: 4,
+    marginTop: 8,
   },
-  roleOption: {
-    flex: 1,
+  roleCard: {
     flexDirection: 'row',
     alignItems: 'center',
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#e0e0e0',
+    backgroundColor: '#ffffff',
+    gap: 12,
+  },
+  roleCardActivePublic: {
+    borderColor: '#1a237e',
+    backgroundColor: '#f5f6ff',
+  },
+  roleCardActiveOfficer: {
+    borderColor: '#e65100',
+    backgroundColor: '#fffcf9',
+  },
+  roleCardIconBg: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#f5f5f5',
+    alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 8,
-    gap: 6,
   },
-  roleOptionActive: {
-    backgroundColor: '#1a237e',
-    elevation: 1,
+  roleCardIconBgActivePublic: {
+    backgroundColor: '#e8eaf6',
   },
-  roleOptionText: {
-    fontSize: 13,
-    fontWeight: '600',
+  roleCardIconBgActiveOfficer: {
+    backgroundColor: '#ffe0b2',
+  },
+  roleCardContent: {
+    flex: 1,
+  },
+  roleCardTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#333333',
+  },
+  roleCardTitleActivePublic: {
+    color: '#1a237e',
+  },
+  roleCardTitleActiveOfficer: {
+    color: '#e65100',
+  },
+  roleCardDesc: {
+    fontSize: 11,
     color: '#757575',
+    marginTop: 2,
+    lineHeight: 15,
   },
-  roleOptionTextActive: {
-    color: '#fff',
+  checkBadge: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   inputContainer: { marginBottom: 16 },
-  inputLabel: { fontSize: 12, fontWeight: '600', color: '#757575', marginBottom: 6 },
+  inputLabel: { fontSize: 13, fontWeight: '700', color: '#1a1a1a', marginBottom: 6 },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',

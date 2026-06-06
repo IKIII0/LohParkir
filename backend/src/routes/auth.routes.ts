@@ -42,9 +42,9 @@ router.post('/login', authLimiter, asyncHandler(async (req: Request, res: Respon
     throw createError('Akun Anda telah dinonaktifkan. Hubungi administrator.', 403);
   }
 
-  // Hanya admin & superadmin yang bisa login via dashboard
-  if (!['admin', 'superadmin', 'officer'].includes(user.role)) {
-    throw createError('Akun ini tidak memiliki akses ke dashboard', 403);
+  // Hanya admin, superadmin, officer, & public yang bisa login ke sistem
+  if (!['admin', 'superadmin', 'officer', 'public'].includes(user.role)) {
+    throw createError('Akun ini tidak memiliki akses ke sistem', 403);
   }
 
   const payload = { userId: user.id, role: user.role, email: user.email };

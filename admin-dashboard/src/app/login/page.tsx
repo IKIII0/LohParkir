@@ -21,6 +21,11 @@ export default function LoginPage() {
     try {
       const res = await authApi.login(email, password);
       const { accessToken, refreshToken, user } = res.data.data;
+      if (!['admin', 'superadmin'].includes(user.role)) {
+        setError('Akun Anda tidak memiliki akses ke Dashboard Admin');
+        setLoading(false);
+        return;
+      }
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
       localStorage.setItem('user', JSON.stringify(user));
