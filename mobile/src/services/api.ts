@@ -71,6 +71,8 @@ export const transactionApi = {
 export const authApi = {
   login: (email: string, password: string) =>
     api.post('/auth/login', { email, password }),
+  register: (data: any) =>
+    api.post('/auth/register', data),
   me: () => api.get('/auth/me'),
   updateFcmToken: (fcmToken: string) =>
     api.put('/auth/fcm-token', { fcmToken }),

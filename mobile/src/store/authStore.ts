@@ -7,6 +7,7 @@ interface User {
   nama: string;
   email: string;
   role: 'public' | 'officer' | 'admin' | 'superadmin';
+  officerId?: string | null;
 }
 
 interface AuthState {
@@ -15,13 +16,14 @@ interface AuthState {
   isLoggedIn: boolean;
 
   login: (email: string, password: string) => Promise<void>;
+  register: (data: any) => Promise<void>;
   logout: () => Promise<void>;
   loadUser: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  isLoading: false,
+  isLoading: true, // Mulai dengan true agar _layout.tsx memproses loading awal
   isLoggedIn: false,
 
   login: async (email: string, password: string) => {
@@ -40,16 +42,33 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
+  register: async (data: any) => {
+    set({ isLoading: true });
+    try {
+      await authApi.register(data);
+      // Pendaftaran sukses, tidak otomatis masuk (sesuai permintaan user)
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
   logout: async () => {
     await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'user']);
     set({ user: null, isLoggedIn: false });
   },
 
   loadUser: async () => {
-    const userJson = await AsyncStorage.getItem('user');
-    const token = await AsyncStorage.getItem('accessToken');
-    if (userJson && token) {
-      set({ user: JSON.parse(userJson), isLoggedIn: true });
+    set({ isLoading: true });
+    try {
+      const userJson = await AsyncStorage.getItem('user');
+      const token = await AsyncStorage.getItem('accessToken');
+      if (userJson && token) {
+        set({ user: JSON.parse(userJson), isLoggedIn: true });
+      }
+    } catch (err) {
+      console.log('Error loading user:', err);
+    } finally {
+      set({ isLoading: false });
     }
   },
 }));

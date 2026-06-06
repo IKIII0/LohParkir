@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import { pool } from '../config/database';
+import { pool, withTransaction } from '../config/database';
 import { asyncHandler, createError } from '../middleware/errorHandler';
 import { authLimiter } from '../middleware/rateLimiter';
 import {
@@ -10,6 +10,8 @@ import {
   verifyRefreshToken,
 } from '../middleware/auth';
 import { logAudit } from '../services/audit.service';
+import { v4 as uuidv4 } from 'uuid';
+import { env } from '../config/env';
 
 const router = Router();
 
@@ -83,6 +85,99 @@ router.post('/login', authLimiter, asyncHandler(async (req: Request, res: Respon
         officerId,
       },
     },
+  });
+}));
+
+// ─── POST /api/v1/auth/register ────────────────────────────────────────────────
+router.post('/register', asyncHandler(async (req: Request, res: Response) => {
+  const { nama, email, password, role, nip, nomorHp } = req.body;
+
+  if (!nama || !email || !password || !role) {
+    throw createError('Formulir pendaftaran tidak lengkap', 400);
+  }
+
+  if (!['public', 'officer'].includes(role)) {
+    throw createError('Role tidak valid', 400);
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+
+  // Cek email duplikat
+  const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [normalizedEmail]);
+  if (existingUser.rows.length > 0) {
+    throw createError('Email sudah terdaftar', 409);
+  }
+
+  const passwordHash = await bcrypt.hash(password, env.BCRYPT_ROUNDS);
+  const userId = uuidv4();
+
+  let registeredData = null;
+
+  if (role === 'officer') {
+    if (!nip) {
+      throw createError('NIP wajib diisi untuk pendaftaran Petugas', 400);
+    }
+    // Cek duplikasi NIP
+    const existingOfficer = await pool.query('SELECT id FROM officers WHERE nip = $1', [nip]);
+    if (existingOfficer.rows.length > 0) {
+      throw createError(`NIP ${nip} sudah terdaftar`, 409);
+    }
+
+    registeredData = await withTransaction(async (client) => {
+      // 1. Buat akun user
+      await client.query(
+        `INSERT INTO users (id, role, nama, email, password_hash, is_active)
+         VALUES ($1, 'officer', $2, $3, $4, TRUE)`,
+        [userId, nama, normalizedEmail, passwordHash]
+      );
+
+      // 2. Generate badge number
+      const year = new Date().getFullYear();
+      const seqResult = await client.query(
+        `SELECT COUNT(*) AS count FROM officers WHERE badge_number LIKE $1`,
+        [`DSH-${year}-%`]
+      );
+      const seq = parseInt(seqResult.rows[0].count) + 1;
+      const badgeNumber = `DSH-${year}-${String(seq).padStart(3, '0')}`;
+
+      // 3. Buat officer record
+      const officerResult = await client.query(
+        `INSERT INTO officers (user_id, nip, nama, nomor_hp, badge_number, status)
+         VALUES ($1, $2, $3, $4, $5, 'aktif') RETURNING *`,
+        [userId, nip, nama, nomorHp || null, badgeNumber]
+      );
+
+      return {
+        userId,
+        officerId: officerResult.rows[0].id,
+        badgeNumber,
+        role: 'officer',
+      };
+    });
+  } else {
+    // Role public
+    await pool.query(
+      `INSERT INTO users (id, role, nama, email, password_hash, is_active)
+       VALUES ($1, 'public', $2, $3, $4, TRUE)`,
+      [userId, nama, normalizedEmail, passwordHash]
+    );
+    registeredData = {
+      userId,
+      role: 'public',
+    };
+  }
+
+  // Audit log
+  await logAudit({
+    userId,
+    aksi: 'REGISTER',
+    ipAddress: req.ip,
+  });
+
+  res.status(201).json({
+    success: true,
+    message: 'Pendaftaran berhasil. Silakan login untuk melanjutkan.',
+    data: registeredData,
   });
 }));
 
