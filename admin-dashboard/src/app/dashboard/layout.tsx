@@ -59,64 +59,74 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const visibleNav = navItems.filter(item => item.roles.includes(userRole));
 
   return (
-    <div className="min-h-screen flex bg-[#f0f2f5]">
+    <div className="min-h-screen flex bg-[#f8fafc] font-sans antialiased text-slate-800">
       {/* Mobile Overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/50 z-20 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 lg:hidden transition-opacity" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-30 w-[260px] bg-gradient-to-b from-[#0d1757] to-[#1a237e] flex flex-col transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0a0f2c] border-r border-slate-800/40 flex flex-col transition-all duration-300 shadow-2xl lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        
+        {/* Decorative subtle top glow */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-yellow-400" />
 
         {/* Logo */}
-        <div className="flex items-center gap-3 px-6 py-5 border-b border-white/10">
-          <div className="w-9 h-9 bg-yellow-400/20 rounded-xl flex items-center justify-center">
-            <ShieldCheck size={20} className="text-yellow-400" />
+        <div className="flex items-center gap-3 px-6 py-6 border-b border-slate-800/40">
+          <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-xl flex items-center justify-center shadow-lg shadow-yellow-500/25 transform hover:scale-105 transition-transform">
+            <ShieldCheck size={22} className="text-slate-950" />
           </div>
           <div>
-            <span className="text-white font-bold text-lg tracking-tight">LohParkir</span>
-            <p className="text-blue-300 text-xs">Dishub Kota Medan</p>
+            <span className="text-white font-extrabold text-lg tracking-tight bg-clip-text bg-gradient-to-r from-white to-slate-300">
+              LohParkir
+            </span>
+            <p className="text-slate-400 text-xs font-semibold tracking-wider uppercase">Dishub Kota Medan</p>
           </div>
-          <button className="ml-auto lg:hidden text-white/60" onClick={() => setSidebarOpen(false)}>
+          <button className="ml-auto lg:hidden text-slate-400 hover:text-white transition-colors" onClick={() => setSidebarOpen(false)}>
             <X size={18} />
           </button>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        {/* Nav Links */}
+        <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
           {visibleNav.map((item) => {
             const active = pathname === item.href || pathname.startsWith(item.href + '/');
             return (
               <Link key={item.href} href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
+                className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 group relative ${
                   active
-                    ? 'bg-white/20 text-white shadow-sm'
-                    : 'text-blue-200 hover:bg-white/10 hover:text-white'
+                    ? 'bg-gradient-to-r from-indigo-600/30 to-blue-600/10 text-white shadow-inner border border-indigo-500/20'
+                    : 'text-slate-400 hover:bg-slate-800/30 hover:text-white'
                 }`}
               >
-                <item.icon size={18} className={active ? 'text-yellow-400' : 'text-blue-300 group-hover:text-white'} />
+                {active && (
+                  <span className="absolute left-0 top-1/3 bottom-1/3 w-1 bg-yellow-400 rounded-r-full" />
+                )}
+                <item.icon size={18} className={`transition-transform duration-200 group-hover:scale-110 ${active ? 'text-yellow-400' : 'text-slate-400 group-hover:text-white'}`} />
                 <span>{item.label}</span>
-                {active && <ChevronRight size={14} className="ml-auto text-yellow-400" />}
+                {active && <ChevronRight size={14} className="ml-auto text-yellow-400 animate-pulse" />}
                 {item.href === '/dashboard/audit' && (
-                  <span className="ml-auto text-xs bg-yellow-400/20 text-yellow-400 px-1.5 py-0.5 rounded-md">SA</span>
+                  <span className="ml-auto text-[10px] font-bold bg-yellow-400/15 text-yellow-400 border border-yellow-400/30 px-1.5 py-0.5 rounded-md">SA</span>
                 )}
               </Link>
             );
           })}
         </nav>
 
-        {/* User Info */}
+        {/* User Info Card */}
         {user && (
-          <div className="p-4 border-t border-white/10">
-            <div className="bg-white/10 rounded-xl p-3 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-white font-bold text-sm">
+          <div className="p-4 border-t border-slate-800/40 bg-slate-950/40">
+            <div className="bg-slate-900/60 border border-slate-800/30 rounded-xl p-3.5 flex items-center gap-3 shadow-inner">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-extrabold text-sm shadow-md">
                 {user.nama.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white text-sm font-semibold truncate">{user.nama}</p>
-                <p className="text-blue-300 text-xs capitalize">{user.role}</p>
+                <p className="text-white text-sm font-bold truncate tracking-tight">{user.nama}</p>
+                <span className="inline-flex items-center text-[10px] font-bold text-yellow-400 uppercase tracking-widest mt-0.5 bg-yellow-400/10 px-1.5 py-0.5 rounded-md border border-yellow-400/25">
+                  {user.role}
+                </span>
               </div>
-              <button onClick={handleLogout} className="text-blue-300 hover:text-red-400 transition-colors" title="Logout">
+              <button onClick={handleLogout} className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-800/30 rounded-lg transition-all" title="Logout">
                 <LogOut size={16} />
               </button>
             </div>
@@ -124,52 +134,59 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         )}
       </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 lg:ml-[260px] flex flex-col min-h-screen">
+      {/* Main Content Area */}
+      <div className="flex-1 lg:ml-64 flex flex-col min-h-screen">
 
-        {/* Header */}
-        <header className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
-          <div className="flex items-center gap-4 px-6 h-14">
-            <button className="lg:hidden text-gray-600" onClick={() => setSidebarOpen(true)}>
+        {/* Top Floating Glass Header */}
+        <header className="sticky top-0 z-35 bg-white/80 backdrop-blur-md border-b border-slate-200/60 shadow-sm px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button className="lg:hidden text-slate-600 p-2 hover:bg-slate-100 rounded-lg transition-colors" onClick={() => setSidebarOpen(true)}>
               <Menu size={20} />
             </button>
 
-            <div className="flex items-center gap-2 flex-1">
-              {/* DB Status */}
-              <div className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${
-                dbStatus === 'online' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-              }`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${dbStatus === 'online' ? 'bg-green-500 pulse-dot' : 'bg-red-500'}`} />
-                Database {dbStatus === 'online' ? 'Terhubung' : 'Terputus'}
-              </div>
+            {/* DB Connection Status Badge */}
+            <div className={`flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full border transition-all duration-300 ${
+              dbStatus === 'online' 
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200/50' 
+                : 'bg-rose-50 text-rose-700 border-rose-200/50'
+            }`}>
+              <span className={`w-2 h-2 rounded-full relative flex`}>
+                {dbStatus === 'online' && (
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                )}
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${dbStatus === 'online' ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
+              </span>
+              <span>Database {dbStatus === 'online' ? 'Terhubung' : 'Terputus'}</span>
             </div>
+          </div>
 
-            {/* Notifications */}
-            <button id="notifications-btn" className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors">
-              <Bell size={18} />
+          <div className="flex items-center gap-3">
+            {/* Notifications Panel Trigger */}
+            <button id="notifications-btn" className="relative p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all">
+              <Bell size={19} />
               {notifications > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-rose-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold border-2 border-white">
                   {notifications > 9 ? '9+' : notifications}
                 </span>
               )}
             </button>
 
-            {/* Emergency Alert Banner (appears when triggered) */}
-            <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-gray-600 hover:text-red-600 transition-colors px-3 py-2 hover:bg-red-50 rounded-xl">
+            {/* Logout Button */}
+            <button onClick={handleLogout} className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-rose-600 transition-all px-3 py-2 hover:bg-rose-50 rounded-xl">
               <LogOut size={16} />
               <span className="hidden sm:block">Keluar</span>
             </button>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 p-6 animate-fade-in">
+        {/* Page Content with soft background */}
+        <main className="flex-1 p-6 md:p-8 bg-[#f8fafc] overflow-y-auto">
           {children}
         </main>
 
         {/* Footer */}
-        <footer className="bg-white border-t border-gray-200 px-6 py-3">
-          <p className="text-xs text-gray-400 text-center">
+        <footer className="bg-white border-t border-slate-100 px-6 py-4">
+          <p className="text-xs text-slate-400 text-center font-medium">
             © 2024 LohParkir — Dinas Perhubungan Kota Medan. Semua hak dilindungi.
           </p>
         </footer>

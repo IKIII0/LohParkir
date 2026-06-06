@@ -46,20 +46,35 @@ function StatCard({
   icon: any; label: string; value: string | number; sub?: string; color: string; trend?: 'up' | 'down' | null;
 }) {
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow animate-fade-in">
+    <div className="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-slate-100 hover:border-slate-200 hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+      {/* Subtle background glow on hover */}
+      <div 
+        className="absolute -right-6 -bottom-6 w-24 h-24 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-300"
+        style={{ backgroundColor: color }}
+      />
+      
       <div className="flex items-start justify-between">
-        <div className={`w-11 h-11 rounded-xl flex items-center justify-center`} style={{ backgroundColor: color + '15' }}>
-          <Icon size={22} style={{ color }} />
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shadow-sm" style={{ backgroundColor: color + '12' }}>
+          <Icon size={24} style={{ color }} />
         </div>
         {trend && (
-          <span className={`text-xs font-bold px-2 py-1 rounded-full ${trend === 'up' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-            {trend === 'up' ? '↑' : '↓'}
+          <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-full flex items-center gap-1 ${
+            trend === 'up' 
+              ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' 
+              : 'bg-rose-50 text-rose-700 border border-rose-100'
+          }`}>
+            {trend === 'up' ? '▲ +12%' : '▼ -4%'}
           </span>
         )}
       </div>
-      <p className="text-gray-500 text-sm mt-3 font-medium">{label}</p>
-      <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
-      {sub && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
+      
+      <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mt-4">{label}</p>
+      <p className="text-3xl font-extrabold text-slate-900 mt-1 tracking-tight">{value}</p>
+      {sub && (
+        <div className="flex items-center gap-1.5 mt-2 text-xs text-slate-400 font-medium border-t border-slate-50/80 pt-2">
+          <span>{sub}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -130,63 +145,69 @@ export default function DashboardPage() {
   const fmtRp = (n: number) => `Rp ${n?.toLocaleString('id') || '0'}`;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 max-w-7xl mx-auto">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard Monitoring</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Update terakhir: {format(lastRefresh, 'HH:mm:ss', { locale: id })}
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Dashboard Monitoring</h1>
+          <p className="text-sm font-medium text-slate-500 mt-1">
+            Update terakhir: {format(lastRefresh, 'HH:mm:ss', { locale: id })} WIB
           </p>
         </div>
         <button
           onClick={loadAll}
-          className="flex items-center gap-2 bg-[#1a237e] text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-[#0d1757] transition-colors"
+          className="flex items-center justify-center gap-2 bg-slate-900 text-white hover:bg-slate-800 active:scale-95 px-5 py-3 rounded-xl text-sm font-bold shadow-md shadow-slate-900/10 transition-all cursor-pointer"
         >
           <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
-          Refresh
+          Refresh Data
         </button>
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard icon={QrCode} label="Total Scan Hari Ini" value={fmt(stats?.total_scan_hari_ini || 0)}
           sub={`${fmt(stats?.scan_valid || 0)} valid · ${fmt(stats?.scan_invalid || 0)} tidak valid`}
-          color="#1a237e" trend="up" />
+          color="#3b82f6" trend="up" />
         <StatCard icon={DollarSign} label="Pendapatan Hari Ini" value={fmtRp(stats?.pendapatan_hari_ini || 0)}
-          sub={`QRIS: ${fmtRp(stats?.pendapatan_qris || 0)}`} color="#2e7d32" />
+          sub={`QRIS: ${fmtRp(stats?.pendapatan_qris || 0)}`} color="#10b981" />
         <StatCard icon={FileText} label="Laporan Hari Ini" value={fmt(stats?.laporan_hari_ini || 0)}
           sub={`${fmt(stats?.laporan_pending || 0)} menunggu tindak lanjut`}
-          color="#e65100" trend={stats?.laporan_pending ? 'up' : null} />
+          color="#f59e0b" trend={stats?.laporan_pending ? 'up' : null} />
         <StatCard icon={Users} label="QR Aktif" value={fmt(stats?.total_qr_aktif || 0)}
-          sub="Petugas terdaftar resmi" color="#7b1fa2" />
+          sub="Petugas terdaftar resmi" color="#8b5cf6" />
       </div>
 
       {/* Charts Row */}
-      <div className="grid lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
         {/* Scan Trend Chart */}
-        <div className="lg:col-span-3 bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <TrendingUp size={18} className="text-[#1a237e]" />
-            Tren Validasi QR (14 Hari Terakhir)
-          </h2>
+        <div className="lg:col-span-3 bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-slate-100 flex flex-col justify-between">
+          <div>
+            <h2 className="font-extrabold text-slate-800 text-lg flex items-center gap-2">
+              <TrendingUp size={20} className="text-blue-500" />
+              Tren Validasi QR (14 Hari Terakhir)
+            </h2>
+            <p className="text-xs text-slate-400 font-medium mt-0.5 mb-6">Distribusi harian scan valid vs tidak valid</p>
+          </div>
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={trend}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="periode" tickFormatter={(v) => format(new Date(v), 'dd/MM')} tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey="periode" tickFormatter={(v) => format(new Date(v), 'dd/MM')} tick={{ fontSize: 11, fill: '#64748b' }} />
+              <YAxis tick={{ fontSize: 11, fill: '#64748b' }} />
               <Tooltip labelFormatter={(v) => format(new Date(v), 'dd MMM yyyy', { locale: id })} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Line dataKey="scan_valid" name="Valid" stroke={COLORS.valid} strokeWidth={2} dot={false} />
-              <Line dataKey="scan_invalid" name="Tidak Valid" stroke={COLORS.invalid} strokeWidth={2} dot={false} strokeDasharray="5 5" />
+              <Legend wrapperStyle={{ fontSize: 12, paddingTop: 10 }} />
+              <Line dataKey="scan_valid" name="Valid" stroke={COLORS.valid} strokeWidth={3} dot={false} />
+              <Line dataKey="scan_invalid" name="Tidak Valid" stroke={COLORS.invalid} strokeWidth={3} dot={false} strokeDasharray="5 5" />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
         {/* Pie Chart */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <h2 className="font-bold text-gray-900 mb-4">Komposisi Scan Hari Ini</h2>
+        <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-slate-100 flex flex-col justify-between">
+          <div>
+            <h2 className="font-extrabold text-slate-800 text-lg">Komposisi Scan Hari Ini</h2>
+            <p className="text-xs text-slate-400 font-medium mt-0.5 mb-6">Persentase keaslian scan juru parkir</p>
+          </div>
           {stats && (stats.scan_valid + stats.scan_invalid) > 0 ? (
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
@@ -196,7 +217,7 @@ export default function DashboardPage() {
                     { name: 'Tidak Valid', value: stats.scan_invalid },
                   ]}
                   cx="50%" cy="50%"
-                  innerRadius={50} outerRadius={80}
+                  innerRadius={55} outerRadius={80}
                   paddingAngle={4} dataKey="value"
                   label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                   labelLine={false}
@@ -208,7 +229,7 @@ export default function DashboardPage() {
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-[180px] flex items-center justify-center text-gray-400 text-sm">
+            <div className="h-[180px] flex items-center justify-center text-slate-400 font-semibold text-sm border border-dashed border-slate-100 rounded-xl bg-slate-50/50">
               Belum ada data scan hari ini
             </div>
           )}
@@ -216,21 +237,22 @@ export default function DashboardPage() {
       </div>
 
       {/* Revenue Chart */}
-      <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-        <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <DollarSign size={18} className="text-green-700" />
+      <div className="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-slate-100">
+        <h2 className="font-extrabold text-slate-800 text-lg flex items-center gap-2 mb-1">
+          <DollarSign size={20} className="text-emerald-500" />
           Pendapatan Parkir (14 Hari Terakhir)
         </h2>
-        <ResponsiveContainer width="100%" height={200}>
+        <p className="text-xs text-slate-400 font-medium mb-6">Perbandingan pendapatan melalui QRIS vs Tunai</p>
+        <ResponsiveContainer width="100%" height={220}>
           <BarChart data={revenue}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="tanggal" tickFormatter={(v) => format(new Date(v), 'dd/MM')} tick={{ fontSize: 11 }} />
-            <YAxis tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} tick={{ fontSize: 11 }} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+            <XAxis dataKey="tanggal" tickFormatter={(v) => format(new Date(v), 'dd/MM')} tick={{ fontSize: 11, fill: '#64748b' }} />
+            <YAxis tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: '#64748b' }} />
             <Tooltip
               formatter={(value: any) => [`Rp ${Number(value || 0).toLocaleString('id')}`, '']}
               labelFormatter={(v) => format(new Date(v), 'dd MMM yyyy', { locale: id })}
             />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <Legend wrapperStyle={{ fontSize: 12, paddingTop: 10 }} />
             <Bar dataKey="total_qris" name="QRIS" fill={COLORS.qris} radius={[4, 4, 0, 0]} />
             <Bar dataKey="total_tunai" name="Tunai" fill={COLORS.tunai} radius={[4, 4, 0, 0]} />
           </BarChart>
