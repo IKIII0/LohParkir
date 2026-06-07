@@ -10,15 +10,15 @@ import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
 
 // Routes
-import authRoutes        from './routes/auth.routes';
-import qrRoutes          from './routes/qr.routes';
-import officerRoutes     from './routes/officers.routes';
-import reportRoutes      from './routes/reports.routes';
+import authRoutes from './routes/auth.routes';
+import qrRoutes from './routes/qr.routes';
+import officerRoutes from './routes/officers.routes';
+import reportRoutes from './routes/reports.routes';
 import transactionRoutes from './routes/transactions.routes';
-import dashboardRoutes   from './routes/dashboard.routes';
-import zoneRoutes        from './routes/zones.routes';
+import dashboardRoutes from './routes/dashboard.routes';
+import zoneRoutes from './routes/zones.routes';
 import notificationRoutes from './routes/notifications.routes';
-import adminRoutes       from './routes/admin.routes';
+import adminRoutes from './routes/admin.routes';
 
 // Config
 import { env } from './config/env';
@@ -72,15 +72,15 @@ app.get('/health', async (_req, res) => {
 // ─── API Routes ───────────────────────────────────────────────────────────────
 const API = '/api/v1';
 
-app.use(`${API}/auth`,          authRoutes);
-app.use(`${API}/qr`,            qrRoutes);
-app.use(`${API}/officers`,      officerRoutes);
-app.use(`${API}/reports`,       reportRoutes);
-app.use(`${API}/transactions`,  transactionRoutes);
-app.use(`${API}/dashboard`,     dashboardRoutes);
-app.use(`${API}/zones`,         zoneRoutes);
+app.use(`${API}/auth`, authRoutes);
+app.use(`${API}/qr`, qrRoutes);
+app.use(`${API}/officers`, officerRoutes);
+app.use(`${API}/reports`, reportRoutes);
+app.use(`${API}/transactions`, transactionRoutes);
+app.use(`${API}/dashboard`, dashboardRoutes);
+app.use(`${API}/zones`, zoneRoutes);
 app.use(`${API}/notifications`, notificationRoutes);
-app.use(`${API}/admin`,         adminRoutes);
+app.use(`${API}/admin`, adminRoutes);
 
 // ─── 404 Handler ──────────────────────────────────────────────────────────────
 app.use((_req, res) => {

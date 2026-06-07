@@ -20,6 +20,11 @@ import { generateIdempotencyKey, formatRupiah } from "../src/utils/helpers";
 
 const NOMINALS = [2000, 3000, 5000, 7000, 10000];
 
+// Static dummy QRIS URLs
+const QRIS_MOTOR_URL = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=LOHPARKIR_QRIS_MOTOR_DUMMY';
+const QRIS_MOBIL_URL = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=LOHPARKIR_QRIS_MOBIL_DUMMY';
+const NOMINAL_THRESHOLD = 3000; // <= 3000 = Motor, > 3000 = Mobil
+
 type PaymentStep = "select" | "qris_show" | "success";
 
 export default function PaymentScreen() {
@@ -36,8 +41,7 @@ export default function PaymentScreen() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<PaymentStep>("select");
   const [successMethod, setSuccessMethod] = useState<"qris" | "tunai">("tunai");
-  // Stores the QRIS image URL returned by the backend
-  const [qrisImageUrl, setQrisImageUrl] = useState<string | null>(null);
+  const [vehicleType, setVehicleType] = useState<"motor" | "mobil">("motor");
 
   const effectiveNominal = useCustom
     ? parseInt(customNominal.replace(/\D/g, ""), 10) || 0
@@ -58,33 +62,15 @@ export default function PaymentScreen() {
     setSelectedNominal(null);
   };
 
-  // ── QRIS ──────────────────────────────────────────────────────────────────
-  const handleCreateQris = async () => {
+  // ── QRIS (Statis / Dummy) ─────────────────────────────────────────────────
+  const handleCreateQris = () => {
     if (!isNominalValid) {
       Alert.alert("Nominal Tidak Valid", "Masukkan nominal minimal Rp 1.000");
       return;
     }
-    setLoading(true);
-    try {
-      const res = await transactionApi.create({
-        officerId,
-        zonaId,
-        nominal: effectiveNominal,
-        metode: "qris",
-        idempotencyKey: generateIdempotencyKey("qris"),
-      });
-      // Simpan URL QR image dari backend jika tersedia
-      const imageUrl: string | undefined = res.data?.data?.qrisImageUrl;
-      setQrisImageUrl(imageUrl ?? null);
-      setStep("qris_show");
-    } catch (err: any) {
-      Alert.alert(
-        "Gagal",
-        err.response?.data?.message || "Gagal membuat kode QRIS. Coba lagi.",
-      );
-    } finally {
-      setLoading(false);
-    }
+    // Determine vehicle type based on nominal threshold
+    setVehicleType(effectiveNominal <= NOMINAL_THRESHOLD ? "motor" : "mobil");
+    setStep("qris_show");
   };
 
   const handleQrisConfirmPaid = () => {
@@ -178,6 +164,13 @@ export default function PaymentScreen() {
 
   // ── QRIS QR display screen ────────────────────────────────────────────────
   if (step === "qris_show") {
+    const isMotor = vehicleType === "motor";
+    const qrisUrl = isMotor ? QRIS_MOTOR_URL : QRIS_MOBIL_URL;
+    const vehicleLabel = isMotor ? "MOTOR" : "MOBIL";
+    const vehicleBadgeColors: [string, string] = isMotor
+      ? ["#e65100", "#ef6c00"]
+      : ["#1a237e", "#283593"];
+
     return (
       <View style={styles.qrisScreen}>
         <ScrollView contentContainerStyle={styles.qrisContent}>
@@ -193,23 +186,30 @@ export default function PaymentScreen() {
             </LinearGradient>
 
             <View style={styles.qrisBody}>
-              {/* Render real QR image dari backend, atau icon fallback */}
-              {qrisImageUrl ? (
-                <Image
-                  source={{ uri: qrisImageUrl }}
-                  style={styles.qrImage}
-                  resizeMode="contain"
-                  accessibilityLabel="Kode QRIS pembayaran parkir"
+              {/* Vehicle Type Badge */}
+              <LinearGradient
+                colors={vehicleBadgeColors}
+                style={styles.vehicleTypeBadge}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Ionicons
+                  name={isMotor ? "bicycle" : "car-sport"}
+                  size={18}
+                  color="#fff"
                 />
-              ) : (
-                <View style={styles.qrPlaceholder}>
-                  <Ionicons name="qr-code" size={140} color="#1a237e" />
-                  <View style={styles.qrCornerTL} />
-                  <View style={styles.qrCornerTR} />
-                  <View style={styles.qrCornerBL} />
-                  <View style={styles.qrCornerBR} />
-                </View>
-              )}
+                <Text style={styles.vehicleTypeBadgeText}>
+                  QRIS STATIS — {vehicleLabel}
+                </Text>
+              </LinearGradient>
+
+              {/* Static QRIS Image */}
+              <Image
+                source={{ uri: qrisUrl }}
+                style={styles.qrImage}
+                resizeMode="contain"
+                accessibilityLabel={`Kode QRIS pembayaran parkir ${vehicleLabel}`}
+              />
 
               <Text style={styles.qrisAmount}>
                 {formatRupiah(effectiveNominal)}
@@ -669,6 +669,23 @@ const styles = StyleSheet.create({
 
   cancelQrisBtn: { padding: 14, alignItems: "center" },
   cancelQrisBtnText: { fontSize: 14, color: "#9e9e9e", fontWeight: "600" },
+
+  // Vehicle Type Badge
+  vehicleTypeBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    marginBottom: 8,
+  },
+  vehicleTypeBadgeText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#ffffff",
+    letterSpacing: 0.5,
+  },
 
   // ── Success screen ────────────────────────────────────────────────────────
   successContainer: { flex: 1 },
